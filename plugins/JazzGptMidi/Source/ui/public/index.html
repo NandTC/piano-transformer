@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JazzGPT MIDI</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="plugin-window">
+        <header class="header">
+            <h1>JazzGPT MIDI</h1>
+            <a href="https://nobody.computer" target="_blank" class="header-brand">Nobody And The Computer</a>
+        </header>
+
+        <section class="input-section">
+            <textarea class="text-area" id="composition" placeholder="Paste LLM output here...">TITLE: Midnight Blue
+TEMPO: 68
+KEY: Eb
+TIME: 4/4
+SWING: medium
+BARS: 8
+
+CHORDS:
+bar 1: Ebmaj7
+bar 2: Fm7(2) Bb7(2)
+bar 3: Ebmaj7
+bar 4: Abmaj7
+bar 5: Abm7(2) Db7(2)
+bar 6: Ebmaj7(2) C7(2)
+bar 7: Fm7(2) Bb7(2)
+bar 8: Ebmaj7
+
+MELODY:
+bar 1 beat 1.0: G4 duration 0.5
+bar 1 beat 1.52: Bb4 duration 0.5
+bar 1 beat 2.05: Eb5 duration 1.0
+bar 1 beat 3.1: D5 duration 0.5
+bar 1 beat 3.58: C5 duration 0.5
+bar 1 beat 4.0: Bb4 duration 1.0
+bar 2 beat 1.0: Ab4 duration 0.5
+bar 2 beat 1.48: G4 duration 0.5
+bar 2 beat 2.0: F4 duration 1.0
+bar 2 beat 3.03: Ab4 duration 0.5
+bar 2 beat 3.52: G4 duration 0.5
+bar 2 beat 4.0: F4 duration 1.0
+bar 3 beat 1.0: Eb4 duration 4.0
+bar 5 beat 1.0: Db5 duration 0.5
+bar 5 beat 1.5: C5 duration 0.5
+bar 5 beat 2.02: Bb4 duration 1.0
+bar 5 beat 3.08: Ab4 duration 0.5
+bar 5 beat 3.55: G4 duration 0.5
+bar 5 beat 4.0: F4 duration 1.0
+bar 6 beat 1.0: E4 duration 1.0
+bar 6 beat 1.97: F4 duration 1.0
+bar 6 beat 3.0: G4 duration 0.5
+bar 6 beat 3.45: A4 duration 0.5
+bar 6 beat 4.0: Bb4 duration 1.0
+bar 7 beat 1.0: C5 duration 0.5
+bar 7 beat 1.48: D5 duration 0.5
+bar 7 beat 2.0: Eb5 duration 1.0
+bar 7 beat 3.05: F5 duration 0.5
+bar 7 beat 3.53: G5 duration 0.5
+bar 7 beat 4.0: Ab5 duration 1.0
+bar 8 beat 1.0: G5 duration 4.0</textarea>
+        </section>
+
+        <div class="preview-bar">
+            <div class="preview-item">
+                <span class="preview-value" id="tempoVal">68</span>
+                <span class="preview-key">bpm</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="keyVal">Eb</span>
+                <span class="preview-key">key</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="timeVal">4/4</span>
+                <span class="preview-key">time</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="barsVal">8</span>
+                <span class="preview-key">bars</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="notesVal">-</span>
+                <span class="preview-key">notes</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="chordsVal">-</span>
+                <span class="preview-key">chords</span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <div class="transport">
+                <button class="btn-transport" id="playBtn" title="Play">▶</button>
+                <button class="btn-transport" id="stopBtn" title="Stop">■</button>
+                <button class="btn-transport btn-options" id="optionsBtn" title="Options">⋮</button>
+            </div>
+            <div class="export-targets">
+                <div class="drag-target" id="exportMelody" title="Export melody MIDI"><span class="drag-text">Melody</span></div>
+                <div class="drag-target" id="exportChords" title="Export chords MIDI"><span class="drag-text">Chords</span></div>
+                <div class="drag-target" id="exportFull" title="Export full MIDI"><span class="drag-text">Full</span></div>
+            </div>
+        </div>
+
+        <!-- Options Menu -->
+        <div class="options-menu" id="optionsMenu" style="display: none;">
+            <div class="options-item" id="optionCopyPrompt">Copy Prompt</div>
+            <div class="options-item" id="optionSaveSong">Save Song</div>
+            <div class="options-item" id="optionLoadSong">Load Song</div>
+            <div class="options-item" id="optionReset">Reset</div>
+        </div>
+
+        <div class="status-bar success" id="statusBar">
+            <span id="statusText">Ready</span>
+            <span id="playhead"></span>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

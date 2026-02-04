@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JazzGPT MIDI - Rhodes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #000000;
+            --fg: #ffffff;
+            --fg-dim: rgba(255, 255, 255, 0.5);
+            --fg-hint: rgba(255, 255, 255, 0.25);
+            --border: rgba(255, 255, 255, 0.12);
+            --border-hover: rgba(255, 255, 255, 0.35);
+            --transition: 0.25s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            font-weight: 300;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            letter-spacing: 0.02em;
+        }
+
+        .plugin-window {
+            width: 480px;
+            height: 540px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .header h1 {
+            font-size: 13px;
+            font-weight: 300;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+        }
+
+        .header-brand {
+            font-size: 8px;
+            color: var(--fg-hint);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .input-section {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .text-area {
+            flex: 1;
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--fg);
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            font-size: 10px;
+            font-weight: 300;
+            padding: 12px;
+            resize: none;
+            transition: border-color var(--transition);
+            line-height: 1.5;
+        }
+
+        .text-area::placeholder { color: var(--fg-hint); }
+        .text-area:focus { outline: none; border-color: var(--border-hover); }
+
+        .preview-bar {
+            padding: 10px 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 20px;
+            font-size: 10px;
+        }
+
+        .preview-item {
+            display: flex;
+            gap: 6px;
+            align-items: baseline;
+        }
+
+        .preview-value { color: var(--fg); }
+        .preview-key {
+            color: var(--fg-hint);
+            font-size: 8px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .actions {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .transport {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-transport {
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--fg-dim);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-transport:hover {
+            border-color: var(--border-hover);
+            color: var(--fg);
+        }
+
+        .btn-transport.playing {
+            background: var(--fg);
+            color: var(--bg);
+            border-color: var(--fg);
+        }
+
+        .export-targets {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .drag-target {
+            width: 72px;
+            height: 36px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: all var(--transition);
+        }
+
+        .drag-target:hover { border-color: var(--border-hover); }
+        .drag-target:active {
+            cursor: grabbing;
+            background: var(--fg);
+            border-color: var(--fg);
+        }
+        .drag-target:active .drag-text { color: var(--bg); }
+
+        .drag-text {
+            font-size: 8px;
+            color: var(--fg-dim);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: color var(--transition);
+        }
+
+        .status-bar {
+            padding: 8px 12px;
+            border-top: 1px solid var(--border);
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            font-size: 9px;
+            color: var(--fg-hint);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-bar.success { color: rgba(120, 255, 150, 0.5); }
+        .status-bar.playing { color: var(--fg-dim); }
+        .status-bar.error { color: rgba(255, 120, 120, 0.7); }
+    </style>
+</head>
+<body>
+    <div class="plugin-window">
+        <header class="header">
+            <h1>JazzGPT MIDI</h1>
+            <span class="header-brand">Nobody And The Computer</span>
+        </header>
+
+        <section class="input-section">
+            <textarea class="text-area" id="composition" placeholder="Paste LLM output here...">TITLE: Midnight Blue
+TEMPO: 68
+KEY: Eb
+TIME: 4/4
+SWING: medium
+BARS: 8
+
+CHORDS:
+bar 1: Ebmaj7
+bar 2: Fm7(2) Bb7(2)
+bar 3: Ebmaj7
+bar 4: Abmaj7
+bar 5: Abm7(2) Db7(2)
+bar 6: Ebmaj7(2) C7(2)
+bar 7: Fm7(2) Bb7(2)
+bar 8: Ebmaj7
+
+MELODY:
+bar 1 beat 1.0: G4 duration 0.5
+bar 1 beat 1.52: Bb4 duration 0.5
+bar 1 beat 2.05: Eb5 duration 1.0
+bar 1 beat 3.1: D5 duration 0.5
+bar 1 beat 3.58: C5 duration 0.5
+bar 1 beat 4.0: Bb4 duration 1.0
+bar 2 beat 1.0: Ab4 duration 0.5
+bar 2 beat 1.48: G4 duration 0.5
+bar 2 beat 2.0: F4 duration 1.0
+bar 2 beat 3.03: Ab4 duration 0.5
+bar 2 beat 3.52: G4 duration 0.5
+bar 2 beat 4.0: F4 duration 1.0
+bar 3 beat 1.0: Eb4 duration 4.0
+bar 5 beat 1.0: Db5 duration 0.5
+bar 5 beat 1.5: C5 duration 0.5
+bar 5 beat 2.02: Bb4 duration 1.0
+bar 5 beat 3.08: Ab4 duration 0.5
+bar 5 beat 3.55: G4 duration 0.5
+bar 5 beat 4.0: F4 duration 1.0
+bar 6 beat 1.0: E4 duration 1.0
+bar 6 beat 1.97: F4 duration 1.0
+bar 6 beat 3.0: G4 duration 0.5
+bar 6 beat 3.45: A4 duration 0.5
+bar 6 beat 4.0: Bb4 duration 1.0
+bar 7 beat 1.0: C5 duration 0.5
+bar 7 beat 1.48: D5 duration 0.5
+bar 7 beat 2.0: Eb5 duration 1.0
+bar 7 beat 3.05: F5 duration 0.5
+bar 7 beat 3.53: G5 duration 0.5
+bar 7 beat 4.0: Ab5 duration 1.0
+bar 8 beat 1.0: G5 duration 4.0</textarea>
+        </section>
+
+        <div class="preview-bar">
+            <div class="preview-item">
+                <span class="preview-value" id="tempoVal">68</span>
+                <span class="preview-key">bpm</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="keyVal">Eb</span>
+                <span class="preview-key">key</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="timeVal">4/4</span>
+                <span class="preview-key">time</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="barsVal">8</span>
+                <span class="preview-key">bars</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="notesVal">-</span>
+                <span class="preview-key">notes</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="chordsVal">-</span>
+                <span class="preview-key">chords</span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <div class="transport">
+                <button class="btn-transport" id="playBtn" title="Play">▶</button>
+                <button class="btn-transport" id="stopBtn" title="Stop">■</button>
+            </div>
+            <div class="export-targets">
+                <div class="drag-target"><span class="drag-text">Melody</span></div>
+                <div class="drag-target"><span class="drag-text">Chords</span></div>
+                <div class="drag-target"><span class="drag-text">Full</span></div>
+            </div>
+        </div>
+
+        <div class="status-bar success" id="statusBar">
+            <span id="statusText">Ready</span>
+            <span id="playhead"></span>
+        </div>
+    </div>
+
+    <script>
+        // ============ PARSER ============
+        function parseComposition(text) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            const result = {
+                title: '', tempo: 120, key: 'C', time: '4/4', swing: 'none', bars: 8,
+                beatsPerBar: 4, chords: [], melody: []
+            };
+
+            let section = 'header';
+            for (const line of lines) {
+                if (line === 'CHORDS:') { section = 'chords'; continue; }
+                if (line === 'MELODY:') { section = 'melody'; continue; }
+
+                if (section === 'header') {
+                    const match = line.match(/^(\w+):\s*(.+)$/);
+                    if (match) {
+                        const [, key, val] = match;
+                        if (key === 'TITLE') result.title = val;
+                        if (key === 'TEMPO') result.tempo = parseInt(val) || 120;
+                        if (key === 'KEY') result.key = val;
+                        if (key === 'TIME') {
+                            result.time = val;
+                            const [num] = val.split('/');
+                            result.beatsPerBar = parseInt(num) || 4;
+                        }
+                        if (key === 'SWING') result.swing = val;
+                        if (key === 'BARS') result.bars = parseInt(val) || 8;
+                    }
+                }
+
+                if (section === 'chords') {
+                    const match = line.match(/^bar\s+(\d+):\s*(.+)$/i);
+                    if (match) {
+                        const barNum = parseInt(match[1]);
+                        const chordPart = match[2];
+                        const chordMatches = chordPart.matchAll(/([A-G][#b]?\w*?)(?:\((\d+(?:\.\d+)?)\))?(?:\s|$)/g);
+                        let beatOffset = 0;
+                        for (const cm of chordMatches) {
+                            const symbol = cm[1];
+                            const dur = cm[2] ? parseFloat(cm[2]) : result.beatsPerBar;
+                            const startBeat = (barNum - 1) * result.beatsPerBar + beatOffset;
+                            result.chords.push({ symbol, startBeat, duration: dur, bar: barNum });
+                            beatOffset += dur;
+                        }
+                    }
+                }
+
+                if (section === 'melody') {
+                    const match = line.match(/^bar\s+(\d+)\s+beat\s+([\d.]+):\s*([A-G][#b]?\d)\s+duration\s+([\d.]+)$/i);
+                    if (match) {
+                        const bar = parseInt(match[1]);
+                        const beat = parseFloat(match[2]);
+                        const pitch = match[3];
+                        const duration = parseFloat(match[4]);
+                        const startBeat = (bar - 1) * result.beatsPerBar + (beat - 1);
+                        result.melody.push({ pitch, startBeat, duration, bar, beat });
+                    }
+                }
+            }
+            return result;
+        }
+
+        // ============ RHODES SYNTH ============
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function noteToFreq(note) {
+            const noteMap = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
+            const match = note.match(/^([A-G])([#b]?)(\d)$/);
+            if (!match) return 440;
+            let [, letter, acc, octave] = match;
+            let midi = 12 + parseInt(octave) * 12 + noteMap[letter];
+            if (acc === '#') midi++;
+            if (acc === 'b') midi--;
+            return 440 * Math.pow(2, (midi - 69) / 12);
+        }
+
+        function chordToNotes(symbol) {
+            const match = symbol.match(/^([A-G])([#b]?)/);
+            if (!match) return ['C4', 'E4', 'G4'];
+            const root = match[1] + (match[2] || '');
+            const quality = symbol.slice(root.length);
+
+            const rootMidi = noteToFreq(root + '3');
+            let intervals = [0, 4, 7];
+
+            if (quality.includes('m7b5') || quality.includes('ø')) intervals = [0, 3, 6, 10];
+            else if (quality.includes('dim7')) intervals = [0, 3, 6, 9];
+            else if (quality.includes('dim')) intervals = [0, 3, 6];
+            else if (quality.includes('aug')) intervals = [0, 4, 8];
+            else if (quality.includes('maj7')) intervals = [0, 4, 7, 11];
+            else if (quality.includes('m7')) intervals = [0, 3, 7, 10];
+            else if (quality.includes('7')) intervals = [0, 4, 7, 10];
+            else if (quality.includes('m')) intervals = [0, 3, 7];
+            else if (quality.includes('sus4')) intervals = [0, 5, 7];
+            else if (quality.includes('sus2')) intervals = [0, 2, 7];
+
+            return intervals.map(i => rootMidi * Math.pow(2, i / 12));
+        }
+
+        // Rhodes electric piano synthesis using FM
+        function playRhodesNote(freq, startTime, duration, velocity = 0.3, type = 'melody') {
+            const ctx = audioCtx;
+
+            // Master gain
+            const masterGain = ctx.createGain();
+            masterGain.connect(ctx.destination);
+
+            // ---- TINE (bell-like attack) using FM synthesis ----
+            const modulator = ctx.createOscillator();
+            const modGain = ctx.createGain();
+            const carrier = ctx.createOscillator();
+            const carrierGain = ctx.createGain();
+
+            // FM: modulator frequency is ~14x carrier for bell-like tone
+            modulator.frequency.value = freq * 14;
+            modulator.type = 'sine';
+
+            // Modulation depth decays quickly (the "tine" attack)
+            const modDepth = freq * 2;
+            modGain.gain.setValueAtTime(modDepth, startTime);
+            modGain.gain.exponentialRampToValueAtTime(modDepth * 0.01, startTime + 0.15);
+
+            modulator.connect(modGain);
+            modGain.connect(carrier.frequency);
+
+            carrier.frequency.value = freq;
+            carrier.type = 'sine';
+
+            // Carrier envelope - quick attack, medium decay, sustain, release
+            const attack = 0.005;
+            const decay = 0.3;
+            const sustainLevel = velocity * 0.4;
+            const release = Math.min(duration * 0.5, 0.8);
+
+            carrierGain.gain.setValueAtTime(0, startTime);
+            carrierGain.gain.linearRampToValueAtTime(velocity, startTime + attack);
+            carrierGain.gain.exponentialRampToValueAtTime(sustainLevel + 0.001, startTime + attack + decay);
+            carrierGain.gain.setValueAtTime(sustainLevel, startTime + duration - release);
+            carrierGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+            carrier.connect(carrierGain);
+
+            // ---- TONE BAR (warm body) ----
+            const toneBar = ctx.createOscillator();
+            const toneBarGain = ctx.createGain();
+
+            toneBar.frequency.value = freq;
+            toneBar.type = 'sine';
+
+            // Second harmonic for warmth
+            const harm2 = ctx.createOscillator();
+            const harm2Gain = ctx.createGain();
+            harm2.frequency.value = freq * 2;
+            harm2.type = 'sine';
+            harm2Gain.gain.value = velocity * 0.15;
+
+            // Tone bar envelope - slower attack, longer sustain
+            toneBarGain.gain.setValueAtTime(0, startTime);
+            toneBarGain.gain.linearRampToValueAtTime(velocity * 0.5, startTime + 0.02);
+            toneBarGain.gain.setValueAtTime(velocity * 0.5, startTime + duration - release);
+            toneBarGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+            harm2Gain.gain.setValueAtTime(0, startTime);
+            harm2Gain.gain.linearRampToValueAtTime(velocity * 0.15, startTime + 0.02);
+            harm2Gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+            toneBar.connect(toneBarGain);
+            harm2.connect(harm2Gain);
+
+            // ---- Low-pass filter for warmth ----
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = type === 'melody' ? 3000 : 1500;
+            filter.Q.value = 0.7;
+
+            // Filter envelope - brighter on attack
+            filter.frequency.setValueAtTime(type === 'melody' ? 5000 : 2500, startTime);
+            filter.frequency.exponentialRampToValueAtTime(type === 'melody' ? 2000 : 1000, startTime + 0.2);
+
+            // ---- Optional subtle tremolo ----
+            const tremolo = ctx.createOscillator();
+            const tremoloGain = ctx.createGain();
+            const tremoloDepth = ctx.createGain();
+
+            tremolo.frequency.value = 4.5; // Tremolo rate
+            tremolo.type = 'sine';
+            tremoloGain.gain.value = 0.08; // Subtle
+            tremoloDepth.gain.value = 1;
+
+            tremolo.connect(tremoloGain);
+            tremoloGain.connect(tremoloDepth.gain);
+
+            // Connect everything
+            carrierGain.connect(filter);
+            toneBarGain.connect(filter);
+            harm2Gain.connect(filter);
+            filter.connect(tremoloDepth);
+            tremoloDepth.connect(masterGain);
+
+            // Reduce chord volume
+            if (type === 'chord') {
+                masterGain.gain.value = 0.4;
+            }
+
+            // Start oscillators
+            modulator.start(startTime);
+            carrier.start(startTime);
+            toneBar.start(startTime);
+            harm2.start(startTime);
+            tremolo.start(startTime);
+
+            // Stop oscillators
+            const stopTime = startTime + duration + 0.1;
+            modulator.stop(stopTime);
+            carrier.stop(stopTime);
+            toneBar.stop(stopTime);
+            harm2.stop(stopTime);
+            tremolo.stop(stopTime);
+        }
+
+        function playChord(symbol, startTime, duration, velocity = 0.12) {
+            const freqs = chordToNotes(symbol);
+            freqs.forEach(freq => {
+                playRhodesNote(freq, startTime, duration, velocity, 'chord');
+            });
+        }
+
+        // ============ PLAYBACK ============
+        let isPlaying = false;
+        let scheduledEvents = [];
+
+        function stopPlayback() {
+            isPlaying = false;
+            playBtn.classList.remove('playing');
+            statusBar.classList.remove('playing');
+            statusBar.classList.add('success');
+            statusText.textContent = 'Ready';
+            playhead.textContent = '';
+            scheduledEvents.forEach(id => clearTimeout(id));
+            scheduledEvents = [];
+        }
+
+        function play() {
+            if (isPlaying) return;
+
+            initAudio();
+            const text = document.getElementById('composition').value;
+            const comp = parseComposition(text);
+
+            document.getElementById('tempoVal').textContent = comp.tempo;
+            document.getElementById('keyVal').textContent = comp.key;
+            document.getElementById('timeVal').textContent = comp.time;
+            document.getElementById('barsVal').textContent = comp.bars;
+            document.getElementById('notesVal').textContent = comp.melody.length;
+            document.getElementById('chordsVal').textContent = comp.chords.length;
+
+            if (comp.melody.length === 0 && comp.chords.length === 0) {
+                statusBar.classList.add('error');
+                statusText.textContent = 'No notes or chords found';
+                return;
+            }
+
+            isPlaying = true;
+            playBtn.classList.add('playing');
+            statusBar.classList.remove('success', 'error');
+            statusBar.classList.add('playing');
+            statusText.textContent = 'Playing';
+
+            const beatDuration = 60 / comp.tempo;
+            const now = audioCtx.currentTime + 0.1;
+
+            // Schedule melody
+            comp.melody.forEach(note => {
+                const startTime = now + note.startBeat * beatDuration;
+                const freq = noteToFreq(note.pitch);
+                playRhodesNote(freq, startTime, note.duration * beatDuration, 0.35, 'melody');
+            });
+
+            // Schedule chords
+            comp.chords.forEach(chord => {
+                const startTime = now + chord.startBeat * beatDuration;
+                playChord(chord.symbol, startTime, chord.duration * beatDuration, 0.1);
+            });
+
+            // Update playhead
+            const totalBeats = comp.bars * comp.beatsPerBar;
+            let currentBeat = 0;
+
+            function updatePlayhead() {
+                if (!isPlaying) return;
+                const bar = Math.floor(currentBeat / comp.beatsPerBar) + 1;
+                const beat = (currentBeat % comp.beatsPerBar) + 1;
+                playhead.textContent = `Bar ${bar} · Beat ${beat}`;
+                currentBeat++;
+
+                if (currentBeat >= totalBeats) {
+                    setTimeout(stopPlayback, beatDuration * 1000);
+                } else {
+                    const id = setTimeout(updatePlayhead, beatDuration * 1000);
+                    scheduledEvents.push(id);
+                }
+            }
+            updatePlayhead();
+        }
+
+        // ============ EVENT HANDLERS ============
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusBar = document.getElementById('statusBar');
+        const statusText = document.getElementById('statusText');
+        const playhead = document.getElementById('playhead');
+
+        playBtn.addEventListener('click', play);
+        stopBtn.addEventListener('click', stopPlayback);
+
+        window.addEventListener('load', () => {
+            const text = document.getElementById('composition').value;
+            const comp = parseComposition(text);
+            document.getElementById('notesVal').textContent = comp.melody.length;
+            document.getElementById('chordsVal').textContent = comp.chords.length;
+        });
+    </script>
+</body>
+</html>

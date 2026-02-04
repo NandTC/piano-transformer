@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JazzGPT MIDI - Compact</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #000000;
+            --fg: #ffffff;
+            --fg-dim: rgba(255, 255, 255, 0.5);
+            --fg-hint: rgba(255, 255, 255, 0.25);
+            --border: rgba(255, 255, 255, 0.12);
+            --border-hover: rgba(255, 255, 255, 0.35);
+            --transition: 0.25s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            font-weight: 300;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            letter-spacing: 0.02em;
+        }
+
+        .plugin-window {
+            width: 480px;
+            height: 520px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+        }
+
+        /* Header */
+        .header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .header h1 {
+            font-size: 13px;
+            font-weight: 300;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+        }
+
+        .header-brand {
+            font-size: 8px;
+            color: var(--fg-hint);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* Text Area */
+        .input-section {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .text-area {
+            flex: 1;
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--fg);
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            font-size: 10px;
+            font-weight: 300;
+            padding: 12px;
+            resize: none;
+            transition: border-color var(--transition);
+            line-height: 1.5;
+        }
+
+        .text-area::placeholder {
+            color: var(--fg-hint);
+        }
+
+        .text-area:focus {
+            outline: none;
+            border-color: var(--border-hover);
+        }
+
+        /* Preview Bar */
+        .preview-bar {
+            padding: 10px 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 20px;
+            font-size: 10px;
+        }
+
+        .preview-item {
+            display: flex;
+            gap: 6px;
+            align-items: baseline;
+        }
+
+        .preview-value {
+            color: var(--fg);
+        }
+
+        .preview-key {
+            color: var(--fg-hint);
+            font-size: 8px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        /* Actions */
+        .actions {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-validate {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--fg-dim);
+            font-family: inherit;
+            font-size: 9px;
+            font-weight: 300;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .btn-validate:hover {
+            border-color: var(--border-hover);
+            color: var(--fg);
+        }
+
+        .btn-validate.active {
+            background: var(--fg);
+            color: var(--bg);
+            border-color: var(--fg);
+        }
+
+        .drag-targets {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .drag-target {
+            width: 72px;
+            height: 40px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: grab;
+            transition: all var(--transition);
+            opacity: 0.4;
+        }
+
+        .drag-target.enabled {
+            opacity: 1;
+        }
+
+        .drag-target.enabled:hover {
+            border-color: var(--border-hover);
+        }
+
+        .drag-target.enabled:active {
+            cursor: grabbing;
+            background: var(--fg);
+            border-color: var(--fg);
+        }
+
+        .drag-target.enabled:active .drag-text {
+            color: var(--bg);
+        }
+
+        .drag-text {
+            font-size: 8px;
+            color: var(--fg-dim);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: color var(--transition);
+        }
+
+        /* Status */
+        .status-bar {
+            padding: 8px 12px;
+            border-top: 1px solid var(--border);
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            font-size: 9px;
+            color: var(--fg-hint);
+        }
+
+        .status-bar.has-error {
+            color: rgba(255, 120, 120, 0.7);
+        }
+
+        .status-bar.success {
+            color: rgba(120, 255, 150, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="plugin-window">
+        <!-- Header -->
+        <header class="header">
+            <h1>JazzGPT MIDI</h1>
+            <span class="header-brand">Nobody And The Computer</span>
+        </header>
+
+        <!-- Text Input -->
+        <section class="input-section">
+            <textarea class="text-area" placeholder="Paste LLM output here...">TITLE: Midnight Blue
+TEMPO: 68
+KEY: Eb
+TIME: 4/4
+SWING: medium
+BARS: 8
+
+CHORDS:
+bar 1: Ebmaj7
+bar 2: Fm7(2) Bb7(2)
+bar 3: Ebmaj7
+bar 4: Abmaj7
+bar 5: Abm7(2) Db7(2)
+bar 6: Ebmaj7(2) C7(2)
+bar 7: Fm7(2) Bb7(2)
+bar 8: Ebmaj7
+
+MELODY:
+bar 1 beat 1.0: G4 duration 0.5
+bar 1 beat 1.52: Bb4 duration 0.5
+bar 1 beat 2.05: Eb5 duration 1.0
+bar 8 beat 1.0: G5 duration 4.0</textarea>
+        </section>
+
+        <!-- Preview -->
+        <div class="preview-bar">
+            <div class="preview-item">
+                <span class="preview-value">68</span>
+                <span class="preview-key">bpm</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value">Eb</span>
+                <span class="preview-key">key</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value">4/4</span>
+                <span class="preview-key">time</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value">8</span>
+                <span class="preview-key">bars</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value">4</span>
+                <span class="preview-key">notes</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value">12</span>
+                <span class="preview-key">chords</span>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn-validate active">Valid</button>
+            <div class="drag-targets">
+                <div class="drag-target enabled">
+                    <span class="drag-text">Melody</span>
+                </div>
+                <div class="drag-target enabled">
+                    <span class="drag-text">Chords</span>
+                </div>
+                <div class="drag-target enabled">
+                    <span class="drag-text">Full</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="status-bar success">Ready to export</div>
+    </div>
+
+    <script>
+        const validateBtn = document.querySelector('.btn-validate');
+        const dragTargets = document.querySelectorAll('.drag-target');
+
+        validateBtn.addEventListener('click', function() {
+            this.classList.toggle('active');
+            dragTargets.forEach(t => t.classList.toggle('enabled'));
+            if (this.classList.contains('active')) {
+                this.textContent = 'Valid';
+                document.querySelector('.status-bar').textContent = 'Ready to export';
+                document.querySelector('.status-bar').classList.add('success');
+                document.querySelector('.status-bar').classList.remove('has-error');
+            } else {
+                this.textContent = 'Validate';
+                document.querySelector('.status-bar').textContent = 'Click validate to parse';
+                document.querySelector('.status-bar').classList.remove('success');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JazzGPT MIDI - Ma Aesthetic Mockup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #000000;
+            --fg: #ffffff;
+            --fg-dim: rgba(255, 255, 255, 0.5);
+            --fg-hint: rgba(255, 255, 255, 0.3);
+            --border: rgba(255, 255, 255, 0.15);
+            --border-hover: rgba(255, 255, 255, 0.4);
+            --transition: 0.3s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            font-weight: 300;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            letter-spacing: 0.02em;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .header-line {
+            width: 60px;
+            height: 1px;
+            background: var(--border);
+            margin: 0 auto 12px;
+        }
+
+        .header-subtitle {
+            font-size: 11px;
+            color: var(--fg-hint);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        /* Separator */
+        .separator {
+            width: 100%;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Text Area */
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-label {
+            font-size: 10px;
+            color: var(--fg-hint);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .text-area {
+            width: 100%;
+            height: 280px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            color: var(--fg);
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            font-size: 12px;
+            font-weight: 300;
+            padding: 20px;
+            resize: none;
+            transition: border-color var(--transition);
+            line-height: 1.6;
+        }
+
+        .text-area::placeholder {
+            color: var(--fg-hint);
+        }
+
+        .text-area:focus {
+            outline: none;
+            border-color: var(--border-hover);
+        }
+
+        /* Validate Button */
+        .validate-section {
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-validate {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--fg-dim);
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 14px 48px;
+            cursor: pointer;
+            transition: all var(--transition);
+            border-radius: 2px;
+        }
+
+        .btn-validate:hover {
+            border-color: var(--border-hover);
+            color: var(--fg);
+        }
+
+        .btn-validate:active,
+        .btn-validate.active {
+            background: var(--fg);
+            color: var(--bg);
+            border-color: var(--fg);
+        }
+
+        /* Drag Targets */
+        .drag-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .drag-label {
+            font-size: 10px;
+            color: var(--fg-hint);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .drag-targets {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .drag-target {
+            flex: 1;
+            max-width: 160px;
+            aspect-ratio: 1.6;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: grab;
+            transition: all var(--transition);
+            position: relative;
+        }
+
+        .drag-target:hover {
+            border-color: var(--border-hover);
+        }
+
+        .drag-target:active {
+            cursor: grabbing;
+            background: var(--fg);
+            border-color: var(--fg);
+        }
+
+        .drag-target:active .drag-icon,
+        .drag-target:active .drag-text {
+            color: var(--bg);
+        }
+
+        .drag-icon {
+            font-size: 20px;
+            color: var(--fg-dim);
+            transition: color var(--transition);
+        }
+
+        .drag-text {
+            font-size: 10px;
+            color: var(--fg-dim);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            transition: color var(--transition);
+        }
+
+        .drag-target.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .preview-label {
+            font-size: 10px;
+            color: var(--fg-hint);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .preview-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .preview-value {
+            font-size: 18px;
+            font-weight: 300;
+            color: var(--fg);
+        }
+
+        .preview-key {
+            font-size: 9px;
+            color: var(--fg-hint);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .preview-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-top: 8px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Errors Section */
+        .errors-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .errors-label {
+            font-size: 10px;
+            color: var(--fg-hint);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .errors-content {
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            font-size: 11px;
+            color: var(--fg-hint);
+            line-height: 1.8;
+            min-height: 44px;
+        }
+
+        .errors-content.has-errors {
+            color: rgba(255, 100, 100, 0.8);
+        }
+
+        .error-line {
+            display: flex;
+            gap: 12px;
+        }
+
+        .error-line-num {
+            color: var(--fg-hint);
+            min-width: 48px;
+        }
+
+        /* State variations */
+        .state-empty .drag-target {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .state-valid .drag-target {
+            opacity: 1;
+            cursor: grab;
+        }
+
+        .state-valid .btn-validate {
+            background: var(--fg);
+            color: var(--bg);
+            border-color: var(--fg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container state-valid">
+        <!-- Header -->
+        <header class="header">
+            <h1>JazzGPT MIDI</h1>
+            <div class="header-line"></div>
+            <div class="header-subtitle">Paste composition below</div>
+        </header>
+
+        <div class="separator"></div>
+
+        <!-- Text Input -->
+        <section class="input-section">
+            <label class="input-label">Composition</label>
+            <textarea class="text-area" placeholder="Paste LLM output here...">TITLE: Midnight Blue
+TEMPO: 68
+KEY: Eb
+TIME: 4/4
+SWING: medium
+BARS: 8
+
+CHORDS:
+bar 1: Ebmaj7
+bar 2: Fm7(2) Bb7(2)
+bar 3: Ebmaj7
+bar 4: Abmaj7
+bar 5: Abm7(2) Db7(2)
+bar 6: Ebmaj7(2) C7(2)
+bar 7: Fm7(2) Bb7(2)
+bar 8: Ebmaj7
+
+MELODY:
+bar 1 beat 1.0: G4 duration 0.5
+bar 1 beat 1.52: Bb4 duration 0.5
+bar 1 beat 2.05: Eb5 duration 1.0
+bar 1 beat 3.1: D5 duration 0.5
+bar 1 beat 3.58: C5 duration 0.5
+bar 1 beat 4.0: Bb4 duration 1.0
+bar 2 beat 1.0: Ab4 duration 0.5
+bar 2 beat 1.48: G4 duration 0.5
+bar 2 beat 2.0: F4 duration 1.0
+bar 8 beat 1.0: G5 duration 4.0</textarea>
+        </section>
+
+        <!-- Validate -->
+        <section class="validate-section">
+            <button class="btn-validate active">Validated</button>
+        </section>
+
+        <div class="separator"></div>
+
+        <!-- Drag Targets -->
+        <section class="drag-section">
+            <div class="drag-label">Drag to DAW</div>
+            <div class="drag-targets">
+                <div class="drag-target">
+                    <div class="drag-icon">♪</div>
+                    <div class="drag-text">Melody</div>
+                </div>
+                <div class="drag-target">
+                    <div class="drag-icon">♫</div>
+                    <div class="drag-text">Chords</div>
+                </div>
+                <div class="drag-target">
+                    <div class="drag-icon">♬</div>
+                    <div class="drag-text">Full</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="separator"></div>
+
+        <!-- Preview -->
+        <section class="preview-section">
+            <div class="preview-label">Preview</div>
+            <div class="preview-grid">
+                <div class="preview-item">
+                    <div class="preview-value">68</div>
+                    <div class="preview-key">Tempo</div>
+                </div>
+                <div class="preview-item">
+                    <div class="preview-value">Eb</div>
+                    <div class="preview-key">Key</div>
+                </div>
+                <div class="preview-item">
+                    <div class="preview-value">4/4</div>
+                    <div class="preview-key">Time</div>
+                </div>
+                <div class="preview-item">
+                    <div class="preview-value">8</div>
+                    <div class="preview-key">Bars</div>
+                </div>
+            </div>
+            <div class="preview-stats">
+                <div class="preview-item">
+                    <div class="preview-value">10</div>
+                    <div class="preview-key">Melody notes</div>
+                </div>
+                <div class="preview-item">
+                    <div class="preview-value">12</div>
+                    <div class="preview-key">Chord changes</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="separator"></div>
+
+        <!-- Errors -->
+        <section class="errors-section">
+            <div class="errors-label">Status</div>
+            <div class="errors-content">
+                No errors
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Simple interaction demo
+        const validateBtn = document.querySelector('.btn-validate');
+        const textArea = document.querySelector('.text-area');
+        const container = document.querySelector('.container');
+
+        validateBtn.addEventListener('click', function() {
+            this.classList.toggle('active');
+            if (this.classList.contains('active')) {
+                this.textContent = 'Validated';
+                container.classList.add('state-valid');
+                container.classList.remove('state-empty');
+            } else {
+                this.textContent = 'Validate';
+                container.classList.remove('state-valid');
+            }
+        });
+
+        // Drag target hover effects
+        document.querySelectorAll('.drag-target').forEach(target => {
+            target.addEventListener('mousedown', function() {
+                if (!container.classList.contains('state-valid')) return;
+                this.style.transform = 'scale(0.98)';
+            });
+            target.addEventListener('mouseup', function() {
+                this.style.transform = '';
+            });
+            target.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+            });
+        });
+    </script>
+</body>
+</html>

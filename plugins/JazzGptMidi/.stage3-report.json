@@ -1,0 +1,32 @@
+{
+  "agent": "gui-agent",
+  "status": "success",
+  "outputs": {
+    "plugin_name": "JazzGptMidi",
+    "webview_integrated": true,
+    "ui_files_created": [
+      "Source/ui/public/index.html",
+      "Source/ui/public/css/styles.css",
+      "Source/ui/public/js/app.js"
+    ],
+    "relays_created": 0,
+    "attachments_created": 0,
+    "native_functions_created": 4,
+    "native_function_names": [
+      "playComposition",
+      "stopPlayback",
+      "exportMIDI",
+      "updateCompositionText"
+    ],
+    "special_notes": [
+      "NO APVTS parameters - action-based plugin",
+      "Custom native functions for C++ <-> JavaScript communication",
+      "No JUCE index.js needed (no parameter bindings)",
+      "Ma aesthetic UI (pure black, white transparency hierarchy)",
+      "Mode detection for Standalone vs VST/AU export behavior",
+      "State persistence for text content"
+    ]
+  },
+  "issues": [],
+  "ready_for_next_stage": true
+}

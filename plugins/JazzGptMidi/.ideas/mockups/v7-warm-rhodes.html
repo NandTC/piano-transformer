@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JazzGPT MIDI - Old Piano</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #000000;
+            --fg: #ffffff;
+            --fg-dim: rgba(255, 255, 255, 0.5);
+            --fg-hint: rgba(255, 255, 255, 0.25);
+            --border: rgba(255, 255, 255, 0.12);
+            --border-hover: rgba(255, 255, 255, 0.35);
+            --transition: 0.25s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            font-weight: 300;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            letter-spacing: 0.02em;
+        }
+
+        .plugin-window {
+            width: 480px;
+            height: 540px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .header h1 {
+            font-size: 13px;
+            font-weight: 300;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+        }
+
+        .header-brand {
+            font-size: 8px;
+            color: var(--fg-hint);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .input-section {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .text-area {
+            flex: 1;
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--fg);
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            font-size: 10px;
+            font-weight: 300;
+            padding: 12px;
+            resize: none;
+            transition: border-color var(--transition);
+            line-height: 1.5;
+        }
+
+        .text-area::placeholder { color: var(--fg-hint); }
+        .text-area:focus { outline: none; border-color: var(--border-hover); }
+
+        .preview-bar {
+            padding: 10px 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 20px;
+            font-size: 10px;
+        }
+
+        .preview-item {
+            display: flex;
+            gap: 6px;
+            align-items: baseline;
+        }
+
+        .preview-value { color: var(--fg); }
+        .preview-key {
+            color: var(--fg-hint);
+            font-size: 8px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .actions {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .transport {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-transport {
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--fg-dim);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-transport:hover {
+            border-color: var(--border-hover);
+            color: var(--fg);
+        }
+
+        .btn-transport.playing {
+            background: var(--fg);
+            color: var(--bg);
+            border-color: var(--fg);
+        }
+
+        .export-targets {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .drag-target {
+            width: 72px;
+            height: 36px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .drag-target:hover {
+            border-color: var(--border-hover);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .drag-target:active {
+            background: var(--fg);
+            border-color: var(--fg);
+        }
+        .drag-target:active .drag-text { color: var(--bg); }
+
+        .drag-text {
+            font-size: 8px;
+            color: var(--fg-dim);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: color var(--transition);
+        }
+
+        .status-bar {
+            padding: 8px 12px;
+            border-top: 1px solid var(--border);
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            font-size: 9px;
+            color: var(--fg-hint);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-bar.success { color: rgba(120, 255, 150, 0.5); }
+        .status-bar.playing { color: var(--fg-dim); }
+        .status-bar.error { color: rgba(255, 120, 120, 0.7); }
+    </style>
+</head>
+<body>
+    <div class="plugin-window">
+        <header class="header">
+            <h1>JazzGPT MIDI</h1>
+            <span class="header-brand">Nobody And The Computer</span>
+        </header>
+
+        <section class="input-section">
+            <textarea class="text-area" id="composition" placeholder="Paste LLM output here...">TITLE: Midnight Blue
+TEMPO: 68
+KEY: Eb
+TIME: 4/4
+SWING: medium
+BARS: 8
+
+CHORDS:
+bar 1: Ebmaj7
+bar 2: Fm7(2) Bb7(2)
+bar 3: Ebmaj7
+bar 4: Abmaj7
+bar 5: Abm7(2) Db7(2)
+bar 6: Ebmaj7(2) C7(2)
+bar 7: Fm7(2) Bb7(2)
+bar 8: Ebmaj7
+
+MELODY:
+bar 1 beat 1.0: G4 duration 0.5
+bar 1 beat 1.52: Bb4 duration 0.5
+bar 1 beat 2.05: Eb5 duration 1.0
+bar 1 beat 3.1: D5 duration 0.5
+bar 1 beat 3.58: C5 duration 0.5
+bar 1 beat 4.0: Bb4 duration 1.0
+bar 2 beat 1.0: Ab4 duration 0.5
+bar 2 beat 1.48: G4 duration 0.5
+bar 2 beat 2.0: F4 duration 1.0
+bar 2 beat 3.03: Ab4 duration 0.5
+bar 2 beat 3.52: G4 duration 0.5
+bar 2 beat 4.0: F4 duration 1.0
+bar 3 beat 1.0: Eb4 duration 4.0
+bar 5 beat 1.0: Db5 duration 0.5
+bar 5 beat 1.5: C5 duration 0.5
+bar 5 beat 2.02: Bb4 duration 1.0
+bar 5 beat 3.08: Ab4 duration 0.5
+bar 5 beat 3.55: G4 duration 0.5
+bar 5 beat 4.0: F4 duration 1.0
+bar 6 beat 1.0: E4 duration 1.0
+bar 6 beat 1.97: F4 duration 1.0
+bar 6 beat 3.0: G4 duration 0.5
+bar 6 beat 3.45: A4 duration 0.5
+bar 6 beat 4.0: Bb4 duration 1.0
+bar 7 beat 1.0: C5 duration 0.5
+bar 7 beat 1.48: D5 duration 0.5
+bar 7 beat 2.0: Eb5 duration 1.0
+bar 7 beat 3.05: F5 duration 0.5
+bar 7 beat 3.53: G5 duration 0.5
+bar 7 beat 4.0: Ab5 duration 1.0
+bar 8 beat 1.0: G5 duration 4.0</textarea>
+        </section>
+
+        <div class="preview-bar">
+            <div class="preview-item">
+                <span class="preview-value" id="tempoVal">68</span>
+                <span class="preview-key">bpm</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="keyVal">Eb</span>
+                <span class="preview-key">key</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="timeVal">4/4</span>
+                <span class="preview-key">time</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="barsVal">8</span>
+                <span class="preview-key">bars</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="notesVal">-</span>
+                <span class="preview-key">notes</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value" id="chordsVal">-</span>
+                <span class="preview-key">chords</span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <div class="transport">
+                <button class="btn-transport" id="playBtn" title="Play">▶</button>
+                <button class="btn-transport" id="stopBtn" title="Stop">■</button>
+            </div>
+            <div class="export-targets">
+                <div class="drag-target" id="exportMelody" title="Download melody MIDI"><span class="drag-text">Melody</span></div>
+                <div class="drag-target" id="exportChords" title="Download chords MIDI"><span class="drag-text">Chords</span></div>
+                <div class="drag-target" id="exportFull" title="Download full MIDI"><span class="drag-text">Full</span></div>
+            </div>
+        </div>
+
+        <div class="status-bar success" id="statusBar">
+            <span id="statusText">Ready</span>
+            <span id="playhead"></span>
+        </div>
+    </div>
+
+    <script>
+        // ============ PARSER ============
+        function parseComposition(text) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            const result = {
+                title: '', tempo: 120, key: 'C', time: '4/4', swing: 'none', bars: 8,
+                beatsPerBar: 4, chords: [], melody: []
+            };
+
+            let section = 'header';
+            for (const line of lines) {
+                if (line === 'CHORDS:') { section = 'chords'; continue; }
+                if (line === 'MELODY:') { section = 'melody'; continue; }
+
+                if (section === 'header') {
+                    const match = line.match(/^(\w+):\s*(.+)$/);
+                    if (match) {
+                        const [, key, val] = match;
+                        if (key === 'TITLE') result.title = val;
+                        if (key === 'TEMPO') result.tempo = parseInt(val) || 120;
+                        if (key === 'KEY') result.key = val;
+                        if (key === 'TIME') {
+                            result.time = val;
+                            const [num] = val.split('/');
+                            result.beatsPerBar = parseInt(num) || 4;
+                        }
+                        if (key === 'SWING') result.swing = val;
+                        if (key === 'BARS') result.bars = parseInt(val) || 8;
+                    }
+                }
+
+                if (section === 'chords') {
+                    const match = line.match(/^bar\s+(\d+):\s*(.+)$/i);
+                    if (match) {
+                        const barNum = parseInt(match[1]);
+                        const chordPart = match[2];
+                        const chordMatches = chordPart.matchAll(/([A-G][#b]?\w*?)(?:\((\d+(?:\.\d+)?)\))?(?:\s|$)/g);
+                        let beatOffset = 0;
+                        for (const cm of chordMatches) {
+                            const symbol = cm[1];
+                            const dur = cm[2] ? parseFloat(cm[2]) : result.beatsPerBar;
+                            const startBeat = (barNum - 1) * result.beatsPerBar + beatOffset;
+                            result.chords.push({ symbol, startBeat, duration: dur, bar: barNum });
+                            beatOffset += dur;
+                        }
+                    }
+                }
+
+                if (section === 'melody') {
+                    const match = line.match(/^bar\s+(\d+)\s+beat\s+([\d.]+):\s*([A-G][#b]?\d)\s+duration\s+([\d.]+)$/i);
+                    if (match) {
+                        const bar = parseInt(match[1]);
+                        const beat = parseFloat(match[2]);
+                        const pitch = match[3];
+                        const duration = parseFloat(match[4]);
+                        const startBeat = (bar - 1) * result.beatsPerBar + (beat - 1);
+                        result.melody.push({ pitch, startBeat, duration, bar, beat });
+                    }
+                }
+            }
+            return result;
+        }
+
+        // ============ WARM RHODES SYNTH ============
+        let audioCtx = null;
+        let masterGainNode = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                masterGainNode = audioCtx.createGain();
+                masterGainNode.connect(audioCtx.destination);
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            // Restore volume when starting playback
+            masterGainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+        }
+
+        function noteToFreq(note) {
+            const noteMap = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
+            const match = note.match(/^([A-G])([#b]?)(\d)$/);
+            if (!match) return 440;
+            let [, letter, acc, octave] = match;
+            let midi = 12 + parseInt(octave) * 12 + noteMap[letter];
+            if (acc === '#') midi++;
+            if (acc === 'b') midi--;
+            return 440 * Math.pow(2, (midi - 69) / 12);
+        }
+
+        function chordToNotes(symbol) {
+            const match = symbol.match(/^([A-G])([#b]?)/);
+            if (!match) return ['C4', 'E4', 'G4'];
+            const root = match[1] + (match[2] || '');
+            const quality = symbol.slice(root.length);
+
+            const rootMidi = noteToFreq(root + '3');
+            let intervals = [0, 4, 7];
+
+            if (quality.includes('m7b5') || quality.includes('ø')) intervals = [0, 3, 6, 10];
+            else if (quality.includes('dim7')) intervals = [0, 3, 6, 9];
+            else if (quality.includes('dim')) intervals = [0, 3, 6];
+            else if (quality.includes('aug')) intervals = [0, 4, 8];
+            else if (quality.includes('maj7')) intervals = [0, 4, 7, 11];
+            else if (quality.includes('m7')) intervals = [0, 3, 7, 10];
+            else if (quality.includes('7')) intervals = [0, 4, 7, 10];
+            else if (quality.includes('m')) intervals = [0, 3, 7];
+            else if (quality.includes('sus4')) intervals = [0, 5, 7];
+            else if (quality.includes('sus2')) intervals = [0, 2, 7];
+
+            return intervals.map(i => rootMidi * Math.pow(2, i / 12));
+        }
+
+        // Old Piano - soft, warm, vintage character
+        function playOldPiano(freq, startTime, duration, velocity = 0.3, type = 'melody') {
+            const ctx = audioCtx;
+
+            // Scale velocity down to prevent clipping
+            const vol = velocity * (type === 'chord' ? 0.08 : 0.15);
+
+            // ---- FUNDAMENTAL ----
+            const fundamental = ctx.createOscillator();
+            const fundGain = ctx.createGain();
+            fundamental.frequency.value = freq;
+            fundamental.type = 'sine';
+
+            const attack = 0.008;
+            const decay = 0.8;
+            const release = Math.min(duration * 0.4, 1.5);
+
+            fundGain.gain.setValueAtTime(0, startTime);
+            fundGain.gain.linearRampToValueAtTime(vol, startTime + attack);
+            fundGain.gain.exponentialRampToValueAtTime(vol * 0.4 + 0.001, startTime + decay);
+            fundGain.gain.setValueAtTime(vol * 0.3, startTime + duration);
+            fundGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration + release);
+
+            fundamental.connect(fundGain);
+
+            // ---- SECOND HARMONIC (octave, subtle) ----
+            const harm2 = ctx.createOscillator();
+            const harm2Gain = ctx.createGain();
+            harm2.frequency.value = freq * 2;
+            harm2.type = 'sine';
+
+            harm2Gain.gain.setValueAtTime(0, startTime);
+            harm2Gain.gain.linearRampToValueAtTime(vol * 0.3, startTime + attack);
+            harm2Gain.gain.exponentialRampToValueAtTime(vol * 0.08 + 0.001, startTime + decay * 0.6);
+            harm2Gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration + release * 0.7);
+
+            harm2.connect(harm2Gain);
+
+            // ---- THIRD HARMONIC (very soft, adds warmth) ----
+            const harm3 = ctx.createOscillator();
+            const harm3Gain = ctx.createGain();
+            harm3.frequency.value = freq * 3;
+            harm3.type = 'sine';
+
+            harm3Gain.gain.setValueAtTime(0, startTime);
+            harm3Gain.gain.linearRampToValueAtTime(vol * 0.12, startTime + attack);
+            harm3Gain.gain.exponentialRampToValueAtTime(0.001, startTime + decay * 0.4);
+
+            harm3.connect(harm3Gain);
+
+            // ---- SOFT LOWPASS FILTER (old piano warmth) ----
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.Q.value = 0.5;
+
+            // Frequency-dependent filtering (higher notes brighter, but still soft)
+            const baseCutoff = type === 'melody' ? 2000 : 1200;
+            filter.frequency.setValueAtTime(baseCutoff, startTime);
+            filter.frequency.exponentialRampToValueAtTime(baseCutoff * 0.5, startTime + 0.5);
+
+            // ---- GENTLE HIGH SHELF CUT (vintage character) ----
+            const highShelf = ctx.createBiquadFilter();
+            highShelf.type = 'highshelf';
+            highShelf.frequency.value = 3000;
+            highShelf.gain.value = -6; // Cut highs for old piano sound
+
+            // Connect: oscillators -> filter -> highShelf -> master
+            fundGain.connect(filter);
+            harm2Gain.connect(filter);
+            harm3Gain.connect(filter);
+            filter.connect(highShelf);
+            highShelf.connect(masterGainNode);
+
+            // Start oscillators
+            fundamental.start(startTime);
+            harm2.start(startTime);
+            harm3.start(startTime);
+
+            // Stop oscillators
+            const stopTime = startTime + duration + release + 0.2;
+            fundamental.stop(stopTime);
+            harm2.stop(stopTime);
+            harm3.stop(stopTime);
+        }
+
+        function playChord(symbol, startTime, duration, velocity = 0.12) {
+            const freqs = chordToNotes(symbol);
+            freqs.forEach(freq => {
+                playOldPiano(freq, startTime, duration, velocity, 'chord');
+            });
+        }
+
+        // ============ PLAYBACK ============
+        let isPlaying = false;
+        let scheduledEvents = [];
+
+        function stopPlayback() {
+            isPlaying = false;
+            playBtn.classList.remove('playing');
+            statusBar.classList.remove('playing');
+            statusBar.classList.add('success');
+            statusText.textContent = 'Ready';
+            playhead.textContent = '';
+            scheduledEvents.forEach(id => clearTimeout(id));
+            scheduledEvents = [];
+            // Full reset - close audio context entirely
+            if (audioCtx) {
+                audioCtx.close();
+                audioCtx = null;
+                masterGainNode = null;
+            }
+        }
+
+        // ============ MIDI FILE GENERATION ============
+        function noteNameToMidi(note) {
+            const noteMap = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
+            const match = note.match(/^([A-G])([#b]?)(\d)$/);
+            if (!match) return 60;
+            let [, letter, acc, octave] = match;
+            let midi = 12 + parseInt(octave) * 12 + noteMap[letter];
+            if (acc === '#') midi++;
+            if (acc === 'b') midi--;
+            return midi;
+        }
+
+        function chordToMidiNotes(symbol) {
+            const match = symbol.match(/^([A-G])([#b]?)/);
+            if (!match) return [60, 64, 67];
+            const root = match[1] + (match[2] || '');
+            const quality = symbol.slice(root.length);
+
+            const rootMidi = noteNameToMidi(root + '3');
+            let intervals = [0, 4, 7];
+
+            if (quality.includes('m7b5') || quality.includes('ø')) intervals = [0, 3, 6, 10];
+            else if (quality.includes('dim7')) intervals = [0, 3, 6, 9];
+            else if (quality.includes('dim')) intervals = [0, 3, 6];
+            else if (quality.includes('aug')) intervals = [0, 4, 8];
+            else if (quality.includes('maj7')) intervals = [0, 4, 7, 11];
+            else if (quality.includes('m7')) intervals = [0, 3, 7, 10];
+            else if (quality.includes('7')) intervals = [0, 4, 7, 10];
+            else if (quality.includes('m')) intervals = [0, 3, 7];
+            else if (quality.includes('sus4')) intervals = [0, 5, 7];
+            else if (quality.includes('sus2')) intervals = [0, 2, 7];
+
+            return intervals.map(i => rootMidi + i);
+        }
+
+        function writeVariableLength(value) {
+            const bytes = [];
+            let v = value;
+            bytes.unshift(v & 0x7F);
+            while ((v >>= 7) > 0) {
+                bytes.unshift((v & 0x7F) | 0x80);
+            }
+            return bytes;
+        }
+
+        function generateMidiFile(comp, includeChords, includeMelody) {
+            const ticksPerBeat = 480;
+            const events = [];
+
+            // Convert melody notes to MIDI events
+            if (includeMelody) {
+                comp.melody.forEach(note => {
+                    const midiNote = noteNameToMidi(note.pitch);
+                    const startTick = Math.round(note.startBeat * ticksPerBeat);
+                    const durationTicks = Math.round(note.duration * ticksPerBeat);
+                    events.push({ tick: startTick, type: 'noteOn', note: midiNote, velocity: 100, channel: 0 });
+                    events.push({ tick: startTick + durationTicks, type: 'noteOff', note: midiNote, velocity: 0, channel: 0 });
+                });
+            }
+
+            // Convert chords to MIDI events
+            if (includeChords) {
+                comp.chords.forEach(chord => {
+                    const midiNotes = chordToMidiNotes(chord.symbol);
+                    const startTick = Math.round(chord.startBeat * ticksPerBeat);
+                    const durationTicks = Math.round(chord.duration * ticksPerBeat);
+                    midiNotes.forEach(midiNote => {
+                        events.push({ tick: startTick, type: 'noteOn', note: midiNote, velocity: 70, channel: 1 });
+                        events.push({ tick: startTick + durationTicks, type: 'noteOff', note: midiNote, velocity: 0, channel: 1 });
+                    });
+                });
+            }
+
+            // Sort events by tick, then noteOff before noteOn at same tick
+            events.sort((a, b) => {
+                if (a.tick !== b.tick) return a.tick - b.tick;
+                if (a.type === 'noteOff' && b.type === 'noteOn') return -1;
+                if (a.type === 'noteOn' && b.type === 'noteOff') return 1;
+                return 0;
+            });
+
+            // Build track data
+            const trackData = [];
+
+            // Tempo meta event (at tick 0)
+            const microsecondsPerBeat = Math.round(60000000 / comp.tempo);
+            trackData.push(...writeVariableLength(0)); // delta time
+            trackData.push(0xFF, 0x51, 0x03); // tempo meta event
+            trackData.push((microsecondsPerBeat >> 16) & 0xFF);
+            trackData.push((microsecondsPerBeat >> 8) & 0xFF);
+            trackData.push(microsecondsPerBeat & 0xFF);
+
+            // Time signature meta event
+            const [num, denom] = comp.time.split('/').map(Number);
+            const denomPower = Math.log2(denom);
+            trackData.push(...writeVariableLength(0));
+            trackData.push(0xFF, 0x58, 0x04);
+            trackData.push(num, denomPower, 24, 8);
+
+            // Track name
+            const trackName = comp.title || 'JazzGPT MIDI';
+            trackData.push(...writeVariableLength(0));
+            trackData.push(0xFF, 0x03, trackName.length);
+            for (let i = 0; i < trackName.length; i++) {
+                trackData.push(trackName.charCodeAt(i));
+            }
+
+            // Note events
+            let lastTick = 0;
+            events.forEach(event => {
+                const deltaTick = event.tick - lastTick;
+                lastTick = event.tick;
+                trackData.push(...writeVariableLength(deltaTick));
+
+                if (event.type === 'noteOn') {
+                    trackData.push(0x90 | event.channel, event.note, event.velocity);
+                } else {
+                    trackData.push(0x80 | event.channel, event.note, event.velocity);
+                }
+            });
+
+            // End of track
+            trackData.push(...writeVariableLength(0));
+            trackData.push(0xFF, 0x2F, 0x00);
+
+            // Build full MIDI file
+            const midiFile = [];
+
+            // Header chunk
+            midiFile.push(0x4D, 0x54, 0x68, 0x64); // "MThd"
+            midiFile.push(0x00, 0x00, 0x00, 0x06); // header length
+            midiFile.push(0x00, 0x00); // format 0
+            midiFile.push(0x00, 0x01); // 1 track
+            midiFile.push((ticksPerBeat >> 8) & 0xFF, ticksPerBeat & 0xFF);
+
+            // Track chunk
+            midiFile.push(0x4D, 0x54, 0x72, 0x6B); // "MTrk"
+            const trackLength = trackData.length;
+            midiFile.push((trackLength >> 24) & 0xFF);
+            midiFile.push((trackLength >> 16) & 0xFF);
+            midiFile.push((trackLength >> 8) & 0xFF);
+            midiFile.push(trackLength & 0xFF);
+            midiFile.push(...trackData);
+
+            return new Uint8Array(midiFile);
+        }
+
+        function downloadMidi(type) {
+            const text = document.getElementById('composition').value;
+            const comp = parseComposition(text);
+
+            if (comp.melody.length === 0 && comp.chords.length === 0) {
+                statusBar.classList.remove('success', 'playing');
+                statusBar.classList.add('error');
+                statusText.textContent = 'No notes or chords to export';
+                return;
+            }
+
+            let midiData;
+            let filename;
+
+            if (type === 'melody') {
+                if (comp.melody.length === 0) {
+                    statusBar.classList.add('error');
+                    statusText.textContent = 'No melody notes to export';
+                    return;
+                }
+                midiData = generateMidiFile(comp, false, true);
+                filename = (comp.title || 'composition') + '_melody.mid';
+            } else if (type === 'chords') {
+                if (comp.chords.length === 0) {
+                    statusBar.classList.add('error');
+                    statusText.textContent = 'No chords to export';
+                    return;
+                }
+                midiData = generateMidiFile(comp, true, false);
+                filename = (comp.title || 'composition') + '_chords.mid';
+            } else {
+                midiData = generateMidiFile(comp, true, true);
+                filename = (comp.title || 'composition') + '_full.mid';
+            }
+
+            // Sanitize filename
+            filename = filename.replace(/[^a-zA-Z0-9_\-\.]/g, '_');
+
+            const blob = new Blob([midiData], { type: 'audio/midi' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            statusBar.classList.remove('error', 'playing');
+            statusBar.classList.add('success');
+            statusText.textContent = `Downloaded ${filename}`;
+        }
+
+        function play() {
+            if (isPlaying) return;
+
+            initAudio();
+            const text = document.getElementById('composition').value;
+            const comp = parseComposition(text);
+
+            document.getElementById('tempoVal').textContent = comp.tempo;
+            document.getElementById('keyVal').textContent = comp.key;
+            document.getElementById('timeVal').textContent = comp.time;
+            document.getElementById('barsVal').textContent = comp.bars;
+            document.getElementById('notesVal').textContent = comp.melody.length;
+            document.getElementById('chordsVal').textContent = comp.chords.length;
+
+            if (comp.melody.length === 0 && comp.chords.length === 0) {
+                statusBar.classList.add('error');
+                statusText.textContent = 'No notes or chords found';
+                return;
+            }
+
+            isPlaying = true;
+            playBtn.classList.add('playing');
+            statusBar.classList.remove('success', 'error');
+            statusBar.classList.add('playing');
+            statusText.textContent = 'Playing';
+
+            const beatDuration = 60 / comp.tempo;
+            const now = audioCtx.currentTime + 0.1;
+
+            comp.melody.forEach(note => {
+                const startTime = now + note.startBeat * beatDuration;
+                const freq = noteToFreq(note.pitch);
+                playOldPiano(freq, startTime, note.duration * beatDuration, 0.5, 'melody');
+            });
+
+            comp.chords.forEach(chord => {
+                const startTime = now + chord.startBeat * beatDuration;
+                playChord(chord.symbol, startTime, chord.duration * beatDuration, 0.1);
+            });
+
+            const totalBeats = comp.bars * comp.beatsPerBar;
+            let currentBeat = 0;
+
+            function updatePlayhead() {
+                if (!isPlaying) return;
+                const bar = Math.floor(currentBeat / comp.beatsPerBar) + 1;
+                const beat = (currentBeat % comp.beatsPerBar) + 1;
+                playhead.textContent = `Bar ${bar} · Beat ${beat}`;
+                currentBeat++;
+
+                if (currentBeat >= totalBeats) {
+                    setTimeout(stopPlayback, beatDuration * 1000);
+                } else {
+                    const id = setTimeout(updatePlayhead, beatDuration * 1000);
+                    scheduledEvents.push(id);
+                }
+            }
+            updatePlayhead();
+        }
+
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusBar = document.getElementById('statusBar');
+        const statusText = document.getElementById('statusText');
+        const playhead = document.getElementById('playhead');
+
+        playBtn.addEventListener('click', play);
+        stopBtn.addEventListener('click', stopPlayback);
+
+        // MIDI export button handlers
+        document.getElementById('exportMelody').addEventListener('click', () => downloadMidi('melody'));
+        document.getElementById('exportChords').addEventListener('click', () => downloadMidi('chords'));
+        document.getElementById('exportFull').addEventListener('click', () => downloadMidi('full'));
+
+        window.addEventListener('load', () => {
+            const text = document.getElementById('composition').value;
+            const comp = parseComposition(text);
+            document.getElementById('notesVal').textContent = comp.melody.length;
+            document.getElementById('chordsVal').textContent = comp.chords.length;
+        });
+    </script>
+</body>
+</html>

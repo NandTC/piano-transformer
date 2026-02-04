@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JazzGPT MIDI - Dual Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #000000;
+            --fg: #ffffff;
+            --fg-dim: rgba(255, 255, 255, 0.5);
+            --fg-hint: rgba(255, 255, 255, 0.25);
+            --border: rgba(255, 255, 255, 0.12);
+            --border-hover: rgba(255, 255, 255, 0.35);
+            --transition: 0.25s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            font-weight: 300;
+            background: #1a1a1a;
+            color: var(--fg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            gap: 40px;
+            letter-spacing: 0.02em;
+        }
+
+        .mode-label {
+            position: absolute;
+            top: 20px;
+            font-size: 10px;
+            color: var(--fg-hint);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .mode-label.left { left: calc(50% - 280px); }
+        .mode-label.right { right: calc(50% - 280px); }
+
+        .plugin-window {
+            width: 480px;
+            height: 540px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .header h1 {
+            font-size: 13px;
+            font-weight: 300;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+        }
+
+        .header-brand {
+            font-size: 8px;
+            color: var(--fg-hint);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* Text Area */
+        .input-section {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .text-area {
+            flex: 1;
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--fg);
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            font-size: 10px;
+            font-weight: 300;
+            padding: 12px;
+            resize: none;
+            transition: border-color var(--transition);
+            line-height: 1.5;
+        }
+
+        .text-area::placeholder {
+            color: var(--fg-hint);
+        }
+
+        .text-area:focus {
+            outline: none;
+            border-color: var(--border-hover);
+        }
+
+        /* Preview Bar */
+        .preview-bar {
+            padding: 10px 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 20px;
+            font-size: 10px;
+        }
+
+        .preview-item {
+            display: flex;
+            gap: 6px;
+            align-items: baseline;
+        }
+
+        .preview-value {
+            color: var(--fg);
+        }
+
+        .preview-key {
+            color: var(--fg-hint);
+            font-size: 8px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        /* Transport + Actions */
+        .actions {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .transport {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-transport {
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--fg-dim);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-transport:hover {
+            border-color: var(--border-hover);
+            color: var(--fg);
+        }
+
+        .btn-transport.playing {
+            background: var(--fg);
+            color: var(--bg);
+            border-color: var(--fg);
+        }
+
+        /* Export targets - shared styles */
+        .export-targets {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .export-target {
+            width: 72px;
+            height: 36px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all var(--transition);
+            background: transparent;
+            font-family: inherit;
+        }
+
+        .export-target:hover {
+            border-color: var(--border-hover);
+        }
+
+        .export-target:active {
+            background: var(--fg);
+            border-color: var(--fg);
+        }
+
+        .export-target:active .export-text {
+            color: var(--bg);
+        }
+
+        .export-text {
+            font-size: 8px;
+            color: var(--fg-dim);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: color var(--transition);
+        }
+
+        /* Drag targets (VST) */
+        .drag-target {
+            cursor: grab;
+        }
+
+        .drag-target:active {
+            cursor: grabbing;
+        }
+
+        /* Download buttons (Standalone) */
+        .download-target {
+            cursor: pointer;
+        }
+
+        /* Status */
+        .status-bar {
+            padding: 8px 12px;
+            border-top: 1px solid var(--border);
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            font-size: 9px;
+            color: var(--fg-hint);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-bar.success {
+            color: rgba(120, 255, 150, 0.5);
+        }
+
+        .status-bar.playing {
+            color: var(--fg-dim);
+        }
+
+        .playhead {
+            color: var(--fg-dim);
+        }
+
+        /* Mode indicator */
+        .mode-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 7px;
+            color: var(--fg-hint);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 3px 6px;
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+    <span class="mode-label left">Standalone App</span>
+    <span class="mode-label right">VST Plugin</span>
+
+    <!-- STANDALONE VERSION -->
+    <div class="plugin-window">
+        <div class="mode-indicator">Standalone</div>
+        <header class="header">
+            <h1>JazzGPT MIDI</h1>
+            <span class="header-brand">Nobody And The Computer</span>
+        </header>
+
+        <section class="input-section">
+            <textarea class="text-area" placeholder="Paste LLM output here...">TITLE: Midnight Blue
+TEMPO: 68
+KEY: Eb
+TIME: 4/4
+SWING: medium
+BARS: 8
+
+CHORDS:
+bar 1: Ebmaj7
+bar 2: Fm7(2) Bb7(2)
+...</textarea>
+        </section>
+
+        <div class="preview-bar">
+            <div class="preview-item">
+                <span class="preview-value">68</span>
+                <span class="preview-key">bpm</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value">Eb</span>
+                <span class="preview-key">key</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value">4/4</span>
+                <span class="preview-key">time</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value">8</span>
+                <span class="preview-key">bars</span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <div class="transport">
+                <button class="btn-transport" title="Play">▶</button>
+                <button class="btn-transport" title="Stop">■</button>
+            </div>
+            <div class="export-targets">
+                <button class="export-target download-target">
+                    <span class="export-text">↓ Melody</span>
+                </button>
+                <button class="export-target download-target">
+                    <span class="export-text">↓ Chords</span>
+                </button>
+                <button class="export-target download-target">
+                    <span class="export-text">↓ Full</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="status-bar success">
+            <span>Ready · Click to download</span>
+        </div>
+    </div>
+
+    <!-- VST VERSION -->
+    <div class="plugin-window">
+        <div class="mode-indicator">VST3</div>
+        <header class="header">
+            <h1>JazzGPT MIDI</h1>
+            <span class="header-brand">Nobody And The Computer</span>
+        </header>
+
+        <section class="input-section">
+            <textarea class="text-area" placeholder="Paste LLM output here...">TITLE: Midnight Blue
+TEMPO: 68
+KEY: Eb
+TIME: 4/4
+SWING: medium
+BARS: 8
+
+CHORDS:
+bar 1: Ebmaj7
+bar 2: Fm7(2) Bb7(2)
+...</textarea>
+        </section>
+
+        <div class="preview-bar">
+            <div class="preview-item">
+                <span class="preview-value">68</span>
+                <span class="preview-key">bpm</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value">Eb</span>
+                <span class="preview-key">key</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value">4/4</span>
+                <span class="preview-key">time</span>
+            </div>
+            <div class="preview-item">
+                <span class="preview-value">8</span>
+                <span class="preview-key">bars</span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <div class="transport">
+                <button class="btn-transport" title="Play">▶</button>
+                <button class="btn-transport" title="Stop">■</button>
+            </div>
+            <div class="export-targets">
+                <div class="export-target drag-target">
+                    <span class="export-text">Melody</span>
+                </div>
+                <div class="export-target drag-target">
+                    <span class="export-text">Chords</span>
+                </div>
+                <div class="export-target drag-target">
+                    <span class="export-text">Full</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar success">
+            <span>Ready · Drag to DAW</span>
+        </div>
+    </div>
+</body>
+</html>
