@@ -1,0 +1,253 @@
+/* ChordGPT — Dark cinematic UI (Stage 1 placeholder, refined in Stage 3 GUI) */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg-primary:    #0a0a0a;
+    --bg-secondary:  #111111;
+    --bg-control:    rgba(255, 255, 255, 0.04);
+    --border:        rgba(255, 255, 255, 0.1);
+    --border-focus:  rgba(255, 255, 255, 0.35);
+    --text-primary:  #e0e0e0;
+    --text-muted:    rgba(255, 255, 255, 0.4);
+    --accent:        rgba(255, 255, 255, 0.15);
+    --font-mono:     'Courier New', 'Courier', monospace;
+}
+
+html, body {
+    height: 100%;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    -webkit-font-smoothing: antialiased;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Header */
+#header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.title {
+    font-size: 13px;
+    letter-spacing: 5px;
+    font-weight: 300;
+    color: var(--text-primary);
+}
+
+.brand {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+/* Chord log (scrollable center area) */
+#chord-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#chord-log::-webkit-scrollbar {
+    width: 4px;
+}
+
+#chord-log::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#chord-log::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+.placeholder {
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.6;
+    padding: 10px 0;
+}
+
+.log-entry {
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-left: 2px solid rgba(255, 255, 255, 0.2);
+    background: var(--bg-control);
+}
+
+.log-entry.pending {
+    opacity: 0.5;
+}
+
+/* Controls (bottom) */
+#controls {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#prompt-input {
+    background: var(--bg-control);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text-primary);
+    padding: 10px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    resize: none;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+#prompt-input:focus {
+    border-color: var(--border-focus);
+}
+
+#prompt-input::placeholder {
+    color: var(--text-muted);
+}
+
+#button-row {
+    display: flex;
+    gap: 8px;
+}
+
+button {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text-primary);
+    padding: 8px 18px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    outline: none;
+}
+
+button:hover {
+    border-color: var(--border-focus);
+    background: var(--accent);
+}
+
+button:active {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+#submit-btn {
+    flex: 1;
+}
+
+/* Settings row */
+#settings-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+#settings-row label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: var(--text-muted);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100px;
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    outline: none;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    cursor: pointer;
+}
+
+select {
+    background: var(--bg-control);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text-primary);
+    padding: 5px 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    outline: none;
+    cursor: pointer;
+}
+
+select:focus {
+    border-color: var(--border-focus);
+}
+
+input[type="password"] {
+    background: var(--bg-control);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text-primary);
+    padding: 5px 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    outline: none;
+    width: 160px;
+}
+
+input[type="password"]:focus {
+    border-color: var(--border-focus);
+}
+
+input[type="password"]::placeholder {
+    color: var(--text-muted);
+}
+
+#save-key-btn {
+    padding: 5px 10px;
+    font-size: 9px;
+    letter-spacing: 1px;
+    align-self: flex-start;
+}
+
+#temperature-display {
+    color: var(--text-primary);
+    font-size: 10px;
+}

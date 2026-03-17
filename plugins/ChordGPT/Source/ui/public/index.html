@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChordGPT</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script type="module" src="js/juce/check_native_interop.js"></script>
+    <script type="module" src="js/juce/index.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div id="header">
+            <span class="title">CHORDGPT</span>
+            <span class="brand">Nobody And The Computer</span>
+        </div>
+
+        <div id="chord-log">
+            <p class="placeholder">Describe a scene or mood to generate a chord...</p>
+        </div>
+
+        <div id="controls">
+            <textarea
+                id="prompt-input"
+                placeholder="A dark forest, something dangerous..."
+                rows="3"
+            ></textarea>
+
+            <div id="button-row">
+                <button id="submit-btn">Generate</button>
+                <button id="new-scene-btn">New Scene</button>
+            </div>
+
+            <div id="settings-row">
+                <label>
+                    Temperature
+                    <input type="range" id="temperature-slider" min="0" max="1.5" step="0.05" value="0.7">
+                    <span id="temperature-display">0.7</span>
+                </label>
+
+                <label>
+                    Voicing
+                    <select id="voicing-select">
+                        <option value="0">Close</option>
+                        <option value="1">Open</option>
+                        <option value="2">Spread</option>
+                        <option value="3">Drop 2</option>
+                    </select>
+                </label>
+
+                <label>
+                    API Key
+                    <input type="password" id="api-key-input" placeholder="sk-...">
+                    <button id="save-key-btn">Save</button>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getNativeFunction } from './js/juce/index.js';
+
+        // Native function bridge — wired to C++ withNativeFunction() callbacks
+        const requestChordFn  = getNativeFunction('requestChord');
+        const newSceneFn      = getNativeFunction('newScene');
+        const setTemperatureFn = getNativeFunction('setTemperature');
+        const setVoicingFn    = getNativeFunction('setVoicing');
+        const setApiKeyFn     = getNativeFunction('setApiKey');
+        const getSettingsFn   = getNativeFunction('getSettings');
+
+        const chordLog         = document.getElementById('chord-log');
+        const promptInput      = document.getElementById('prompt-input');
+        const temperatureSlider = document.getElementById('temperature-slider');
+        const temperatureDisplay = document.getElementById('temperature-display');
+        const voicingSelect    = document.getElementById('voicing-select');
+        const apiKeyInput      = document.getElementById('api-key-input');
+
+        // Load persisted settings on startup
+        getSettingsFn().then(result => {
+            try {
+                const settings = JSON.parse(result);
+                if (settings.temperature !== undefined) {
+                    temperatureSlider.value = settings.temperature;
+                    temperatureDisplay.textContent = parseFloat(settings.temperature).toFixed(2);
+                }
+                if (settings.voicing !== undefined) {
+                    voicingSelect.value = settings.voicing;
+                }
+                if (settings.hasApiKey) {
+                    apiKeyInput.placeholder = 'API key saved';
+                }
+            } catch (e) {
+                console.warn('Could not parse settings:', e);
+            }
+        });
+
+        // Generate chord
+        document.getElementById('submit-btn').addEventListener('click', () => {
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+
+            const entry = document.createElement('div');
+            entry.className = 'log-entry pending';
+            entry.textContent = '> ' + prompt;
+            chordLog.appendChild(entry);
+            chordLog.scrollTop = chordLog.scrollHeight;
+
+            requestChordFn(prompt).then(() => {
+                entry.classList.remove('pending');
+            });
+        });
+
+        // New scene
+        document.getElementById('new-scene-btn').addEventListener('click', () => {
+            newSceneFn();
+            chordLog.innerHTML = '<p class="placeholder">New scene started...</p>';
+        });
+
+        // Temperature slider
+        temperatureSlider.addEventListener('input', () => {
+            const val = parseFloat(temperatureSlider.value);
+            temperatureDisplay.textContent = val.toFixed(2);
+            setTemperatureFn(val);
+        });
+
+        // Voicing selector
+        voicingSelect.addEventListener('change', () => {
+            setVoicingFn(parseInt(voicingSelect.value, 10));
+        });
+
+        // API key save
+        document.getElementById('save-key-btn').addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                setApiKeyFn(key);
+                apiKeyInput.value = '';
+                apiKeyInput.placeholder = 'API key saved';
+            }
+        });
+    </script>
+</body>
+</html>
