@@ -38,14 +38,25 @@ def read_primer_midi(midi_path, primer_length_tokens):
             max_shift_steps=100
         )
     )
+    vocab_size = encoder_decoder.num_classes
 
+    # Quantize note sequence, then build Performance from it
+    qns = note_seq.quantize_note_sequence_absolute(ns, steps_per_second=100)
     performance = note_seq.Performance(
-        note_sequence=ns,
+        quantized_sequence=qns,
         num_velocity_bins=32,
         max_shift_steps=100
     )
 
-    token_ids = encoder_decoder.encode(performance)
+    # Convert events → class indices (token IDs)
+    events = list(performance)
+    token_ids = []
+    for i, event in enumerate(events):
+        try:
+            label = encoder_decoder.events_to_label(events, i)
+            token_ids.append(label)
+        except Exception:
+            pass
 
     # Trim to primer_length
     trimmed = token_ids[:primer_length_tokens]

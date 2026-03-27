@@ -79,8 +79,9 @@ def load_model(checkpoint_dir):
     print(f"[generate] Loading model from {checkpoint_dir} ...")
     progress.set(status="loading", percent=0)
 
-    # Use the unconditional piano_transformer problem
-    problem_name = "score2perf_maestro_absabs"
+    from tensor2tensor.utils import registry
+
+    problem_name = "score2perf_maestro_language_uncropped_aug"
     model_name = "transformer"
     hparam_set = "transformer_tpu"
 
@@ -88,21 +89,25 @@ def load_model(checkpoint_dir):
     hparams.num_hidden_layers = 16
     hparams.sampling_method = "random"
 
-    run_config = trainer_lib.create_run_config(hparams)
+    problem = registry.problem(problem_name)
+    problem_hparams = problem.get_hparams(hparams)
+    hparams.problem_hparams = problem_hparams
 
-    problem = score2perf.Score2PerfProblem()
-    encoders = problem.get_feature_encoders()
+    decode_hp = decoding.decode_hparams("beam_size=1,alpha=0.0")
+    decode_hp.batch_size = 1
+
+    run_config = trainer_lib.create_run_config(hparams)
 
     estimator = trainer_lib.create_estimator(
         model_name,
         hparams,
         run_config,
-        decode_hparams=decoding.decode_hparams()
+        decode_hparams=decode_hp,
     )
 
     _estimator = estimator
     _hparams = hparams
-    _encoders = encoders
+    _encoders = problem_hparams.vocabulary["targets"]
 
     print("[generate] Model loaded.")
     progress.set(status="idle", percent=0)
@@ -245,6 +250,15 @@ def _decode_tokens_to_note_sequence(token_ids):
             max_shift_steps=100
         )
     )
-    performance = encoder_decoder.decode(token_ids)
-    ns = performance.to_sequence()
-    return ns
+    vocab_size = encoder_decoder.num_classes
+    perf = note_seq.Performance(steps_per_second=100, num_velocity_bins=32)
+    event_list = []
+    for t in token_ids:
+        if 0 < t < vocab_size:
+            try:
+                event = encoder_decoder.class_index_to_event(t, event_list)
+                event_list.append(event)
+                perf.append(event)
+            except Exception:
+                pass
+    return perf.to_sequence()
