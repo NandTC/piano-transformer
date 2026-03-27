@@ -1,0 +1,9 @@
+node_modules/
+dist/
+resources/model-checkpoint/
+resources/python-env/
+resources/python-env*.tar.gz
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store

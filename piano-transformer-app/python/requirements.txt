@@ -1,0 +1,10 @@
+# PianoTransformer — Python sidecar dependencies
+# PINNED — do not upgrade without testing. TF 2.13+ breaks Magenta's compat layer.
+
+magenta==2.1.4
+tensorflow==2.9.1           # Intel Mac / Windows / Linux
+# tensorflow-macos==2.9.0   # Uncomment for Apple Silicon (M1/M2/M3)
+# tensorflow-metal           # Uncomment for Apple Silicon GPU acceleration
+note_seq==0.0.5
+pretty_midi==0.2.10
+flask==2.3.3
