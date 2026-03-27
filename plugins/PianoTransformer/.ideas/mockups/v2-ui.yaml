@@ -1,0 +1,275 @@
+---
+# PianoTransformer — v2 UI Specification
+# Standalone Electron app using Google Magenta Music Transformer
+# Generated: 2026-03-27
+# Aesthetic: Vintage Bakelite
+
+window:
+  width: 680
+  height: 600
+  resizable: false
+  title: "PIANO TRANSFORMER"
+
+aesthetic:
+  theme: vintage_bakelite
+  description: >
+    Warm dark brown Bakelite shell. Radial gradient top-lit surface. SVG Perlin noise
+    texture. Stitched inner border. Controls have deep inset recesses. Cream-on-brown
+    typography. Thumb elements are slightly raised — molded tactile feel throughout.
+
+styling:
+  colors:
+    bg_main: "radial-gradient(circle at 50% 0%, #2a1808, #1a0800)"
+    bg_surface: "#1a0800"
+    accent_primary: "#d4b494"
+    accent_hover: "#c49564"
+    text_primary: "#a88870"
+    text_secondary: "#986a4a"
+    control_base: "linear-gradient(to bottom, #3a2010, #2a1008)"
+    control_active: "linear-gradient(to bottom, #5a4030, #4a3020)"
+    border_default: "#2a1408"
+    border_hover: "#c49564"
+    stitch_color: "rgba(212, 180, 148, 0.15)"
+  fonts:
+    primary: "system-ui, -apple-system, sans-serif"
+    weight_title: "bold"
+    weight_label: "normal"
+    letter_spacing_title: "0.25em"
+    letter_spacing_label: "0.15em"
+    text_transform: "uppercase"
+
+# ──────────────────────────────────────────────────────────────
+# LAYOUT REGIONS  (window: 680 × 600)
+# All coordinates absolute from top-left of window.
+# Edge padding enforced: 15px minimum from all window edges.
+# Control spacing enforced: 10px minimum between controls.
+# ──────────────────────────────────────────────────────────────
+
+regions:
+
+  header:
+    position: { x: 0, y: 0 }
+    size: { width: 680, height: 72 }
+    elements:
+      - id: app_title
+        text: "PIANO TRANSFORMER"
+        position: { x: 0, y: 20 }
+        typography:
+          size: "17px"
+          weight: "bold"
+          letter_spacing: "0.25em"
+          align: center
+          color: "#d4b494"
+      - id: app_subtitle
+        text: "AI PIANO MIDI GENERATOR"
+        position: { x: 0, y: 46 }
+        typography:
+          size: "9px"
+          weight: "normal"
+          letter_spacing: "0.30em"
+          align: center
+          color: "#986a4a"
+
+  dropzone:
+    position: { x: 30, y: 84 }
+    size: { width: 620, height: 72 }
+    description: >
+      Dark inset recessed panel. 1px dashed cream border at 0.3 opacity.
+      Empty state: centered "DROP SEED MIDI" with arrow-down icon suggestion.
+      Loaded state: filename text left-aligned, × clear button right side.
+      Hover: border brightens to full cream, subtle warm inner glow.
+    states:
+      - id: empty
+        label: "DROP SEED MIDI  —  OPTIONAL PRIMER"
+      - id: hover
+        label: "DROP SEED MIDI  —  OPTIONAL PRIMER"
+        border: "rgba(212,180,148,0.7)"
+        inner_glow: "inset 0 0 18px rgba(196,149,100,0.10)"
+      - id: loaded
+        shows_filename: true
+        shows_clear_button: true
+    style:
+      background: "#130600"
+      border: "1px dashed rgba(212,180,148,0.30)"
+      border_radius: "2px"
+      inner_shadow: "inset 0 3px 10px rgba(0,0,0,0.55), inset 0 1px 3px rgba(0,0,0,0.40)"
+
+  controls_section:
+    position: { x: 30, y: 172 }
+    size: { width: 620, height: 228 }
+    layout: vertical_stack
+    description: >
+      Four full-width horizontal sliders stacked vertically.
+      Each row: label left-aligned, value readout right-aligned, slider beneath spanning full width.
+      Rows separated by 14px gap.
+
+  action_row:
+    position: { x: 30, y: 416 }
+    size: { width: 620, height: 52 }
+    description: >
+      Three interactive elements on one row.
+      Play/Stop: left-aligned square button (52×52).
+      Generate: center, largest button, full cream border glow on hover.
+      Download .mid: right-aligned, disabled-muted state until generation complete.
+    elements:
+      - id: play_button
+        position_offset: left
+        size: { width: 52, height: 52 }
+        style: transport
+      - id: generate_button
+        position_offset: center
+        size: { width: 320, height: 52 }
+        style: primary_cta
+        label: "GENERATE"
+      - id: download_button
+        position_offset: right
+        size: { width: 170, height: 52 }
+        style: secondary_action
+        label: "DOWNLOAD .MID"
+        state_default: disabled
+
+  status_bar:
+    position: { x: 30, y: 484 }
+    size: { width: 620, height: 88 }
+    elements:
+      - id: status_label
+        text_default: "READY"
+        states:
+          - id: ready
+            text: "READY"
+            color: "#986a4a"
+          - id: generating
+            text: "GENERATING..."
+            color: "#d4b494"
+          - id: complete
+            text: "COMPLETE"
+            color: "#c49564"
+          - id: error
+            text: "ERROR"
+            color: "#cc4444"
+      - id: progress_bar
+        visible_when: generating
+        position_within_region: { x: 0, y: 28 }
+        size: { width: 620, height: 6 }
+        track_color: "#130600"
+        fill_color: "#c49564"
+        border_radius: "3px"
+
+# ──────────────────────────────────────────────────────────────
+# CONTROLS — Parameter Specification
+# (machine-readable, maps to WebSliderRelay in Electron context)
+# ──────────────────────────────────────────────────────────────
+
+controls:
+  - id: temperature
+    type: slider
+    orientation: horizontal
+    label: "TEMPERATURE"
+    position: { x: 30, y: 196 }
+    size: { width: 620, height: 24 }
+    range: [0.1, 2.0]
+    default: 1.0
+    step: 0.01
+    display_precision: 2
+    tooltip: "Controls generation randomness. Lower = predictable, higher = creative."
+
+  - id: sequence_length
+    type: slider
+    orientation: horizontal
+    label: "SEQUENCE LENGTH"
+    position: { x: 30, y: 251 }
+    size: { width: 620, height: 24 }
+    range: [128, 2048]
+    default: 512
+    step: 1
+    display_precision: 0
+    tooltip: "Number of MIDI tokens to generate."
+
+  - id: primer_length
+    type: slider
+    orientation: horizontal
+    label: "PRIMER LENGTH"
+    position: { x: 30, y: 306 }
+    size: { width: 620, height: 24 }
+    range: [0, 512]
+    default: 64
+    step: 1
+    display_precision: 0
+    tooltip: "How many tokens from seed MIDI to use as primer."
+
+  - id: tempo
+    type: slider
+    orientation: horizontal
+    label: "TEMPO"
+    position: { x: 30, y: 361 }
+    size: { width: 620, height: 24 }
+    range: [40, 200]
+    default: 120
+    step: 1
+    display_precision: 0
+    unit: "BPM"
+    tooltip: "Playback and export tempo in beats per minute."
+
+# ──────────────────────────────────────────────────────────────
+# LAYOUT VALIDATION RECORD
+# Window: 680 × 600  |  Edge padding min: 15px  |  Spacing min: 10px
+# ──────────────────────────────────────────────────────────────
+
+layout_validation:
+  window: "680 × 600"
+  edge_padding_minimum: 15
+  control_spacing_minimum: 10
+
+  checks:
+    - region: header
+      right_edge: 680    # 0 + 680 = 680 <= 680  PASS
+      bottom_edge: 72    # 0 + 72  = 72  <= 600  PASS
+
+    - region: dropzone
+      left_padding: 30   # >= 15   PASS
+      top_padding: 84    # >= 15   PASS
+      right_edge: 650    # 30+620=650 <= 680  PASS
+      bottom_edge: 156   # 84+72=156  <= 600  PASS
+      gap_below_header: 12  # 84-72=12 NOTE: tight but no overlap
+
+    - control: temperature
+      left_padding: 30   # >= 15   PASS
+      top_padding: 196   # >= 15   PASS
+      right_edge: 650    # 30+620=650 <= 680  PASS
+      bottom_edge: 220   # 196+24=220 <= 600  PASS
+      right_padding: 30  # 680-650=30 >= 15  PASS
+
+    - control: sequence_length
+      left_padding: 30   # >= 15   PASS
+      right_edge: 650    # 30+620=650 <= 680  PASS
+      bottom_edge: 275   # 251+24=275 <= 600  PASS
+      gap_from_previous: 31  # 251-220=31 >= 10  PASS
+
+    - control: primer_length
+      left_padding: 30   # >= 15   PASS
+      right_edge: 650    # 30+620=650 <= 680  PASS
+      bottom_edge: 330   # 306+24=330 <= 600  PASS
+      gap_from_previous: 31  # 306-275=31 >= 10  PASS
+
+    - control: tempo
+      left_padding: 30   # >= 15   PASS
+      right_edge: 650    # 30+620=650 <= 680  PASS
+      bottom_edge: 385   # 361+24=385 <= 600  PASS
+      gap_from_previous: 31  # 361-330=31 >= 10  PASS
+      right_padding: 30  # 680-650=30 >= 15  PASS
+
+    - region: action_row
+      left_padding: 30   # >= 15   PASS
+      top: 416           # >= 15   PASS
+      right_edge: 650    # 30+620=650 <= 680  PASS
+      bottom_edge: 468   # 416+52=468 <= 600  PASS
+      gap_from_controls: 31  # 416-385=31 >= 10  PASS
+
+    - region: status_bar
+      left_padding: 30   # >= 15   PASS
+      right_edge: 650    # 30+620=650 <= 680  PASS
+      bottom_edge: 572   # 484+88=572 <= 600  PASS
+      bottom_padding: 28  # 600-572=28 >= 15  PASS
+      gap_from_action: 16  # 484-468=16 >= 10  PASS
+
+  status: PASSED

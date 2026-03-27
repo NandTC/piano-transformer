@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PianoTransformer — UI Mockup v2</title>
+
+  <style>
+    /* ─────────────────────────────────────────────
+       WEBVIEW REQUIRED: percentage height, no vh/vw
+       ───────────────────────────────────────────── */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    /* ─────────────────────────────────────────────
+       DESIGN TOKENS — Vintage Bakelite Palette
+       ───────────────────────────────────────────── */
+    :root {
+      --bg-main:          radial-gradient(circle at 50% 0%, #2a1808, #1a0800);
+      --bg-surface:       #1a0800;
+      --bg-deep:          #130600;
+      --bg-recess:        #0e0400;
+      --accent-primary:   #d4b494;
+      --accent-hover:     #c49564;
+      --accent-dim:       #a07848;
+      --text-primary:     #a88870;
+      --text-secondary:   #986a4a;
+      --text-cream:       #d4b494;
+      --text-muted:       #5a3a20;
+      --control-base:     linear-gradient(to bottom, #3a2010, #2a1008);
+      --control-active:   linear-gradient(to bottom, #5a4030, #4a3020);
+      --border-default:   #2a1408;
+      --border-hover:     #c49564;
+      --stitch-color:     rgba(212, 180, 148, 0.15);
+      --shadow-deep:      rgba(0,0,0,0.75);
+      --shadow-mid:       rgba(0,0,0,0.5);
+    }
+
+    /* ─────────────────────────────────────────────
+       BODY — Native application feel
+       ───────────────────────────────────────────── */
+    body {
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: default;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text-primary);
+      background: #0e0400;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    /* ─────────────────────────────────────────────
+       APP SHELL — 680 × 600 fixed window
+       ───────────────────────────────────────────── */
+    .app-shell {
+      width: 680px;
+      height: 600px;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-main);
+
+      /* Outer casing bevel */
+      box-shadow:
+        0 0 0 1px #0a0200,
+        0 0 0 2px #3a1a08,
+        0 12px 40px rgba(0,0,0,0.85),
+        inset 0 1px 0 rgba(212,180,148,0.10),
+        inset 0 -1px 0 rgba(0,0,0,0.6);
+    }
+
+    /* SVG Perlin noise texture overlay */
+    .app-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.3' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.17'/%3E%3C/svg%3E");
+      opacity: 1;
+    }
+
+    /* Stitched inner border */
+    .app-shell::after {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      border: 1px dashed var(--stitch-color);
+      pointer-events: none;
+      z-index: 99;
+      border-radius: 1px;
+    }
+
+    /* ─────────────────────────────────────────────
+       HEADER
+       ───────────────────────────────────────────── */
+    .header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 680px;
+      height: 72px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      /* Subtle top-edge highlight — molded rim */
+      border-bottom: 1px solid rgba(212,180,148,0.07);
+    }
+
+    .app-title {
+      font-size: 17px;
+      font-weight: bold;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-cream);
+      text-shadow: 0 1px 6px rgba(212,180,148,0.20);
+      margin: 0;
+    }
+
+    .app-subtitle {
+      font-size: 9px;
+      font-weight: normal;
+      letter-spacing: 0.30em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    /* ─────────────────────────────────────────────
+       DROPZONE
+       ───────────────────────────────────────────── */
+    .dropzone {
+      position: absolute;
+      top: 84px;
+      left: 30px;
+      width: 620px;
+      height: 72px;
+      background: var(--bg-deep);
+      border: 1px dashed rgba(212,180,148,0.30);
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+      box-shadow:
+        inset 0 3px 10px rgba(0,0,0,0.55),
+        inset 0 1px 3px rgba(0,0,0,0.40);
+    }
+
+    .dropzone:hover,
+    .dropzone.drag-over {
+      border-color: rgba(212,180,148,0.70);
+      box-shadow:
+        inset 0 3px 10px rgba(0,0,0,0.55),
+        inset 0 1px 3px rgba(0,0,0,0.40),
+        inset 0 0 18px rgba(196,149,100,0.08);
+    }
+
+    .dropzone-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dropzone-arrow {
+      width: 16px;
+      height: 16px;
+      opacity: 0.35;
+      /* Down-pointing arrow via CSS */
+      border-left: 2px solid var(--text-cream);
+      border-bottom: 2px solid var(--text-cream);
+      transform: rotate(-45deg) translateY(-3px);
+    }
+
+    .dropzone-label {
+      font-size: 9px;
+      font-weight: normal;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .dropzone-loaded {
+      display: none;
+      width: 100%;
+      padding: 0 18px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dropzone-filename {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--text-cream);
+      text-transform: uppercase;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 540px;
+    }
+
+    .dropzone-clear {
+      width: 22px;
+      height: 22px;
+      border: 1px solid rgba(212,180,148,0.25);
+      border-radius: 50%;
+      background: var(--bg-recess);
+      color: var(--text-secondary);
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.1s, color 0.1s;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .dropzone-clear:hover {
+      border-color: rgba(212,180,148,0.6);
+      color: var(--text-cream);
+    }
+
+    /* ─────────────────────────────────────────────
+       CONTROLS SECTION DIVIDER
+       ───────────────────────────────────────────── */
+    .section-divider {
+      position: absolute;
+      left: 30px;
+      width: 620px;
+      height: 1px;
+      background: linear-gradient(to right,
+        transparent 0%,
+        rgba(212,180,148,0.12) 15%,
+        rgba(212,180,148,0.12) 85%,
+        transparent 100%
+      );
+    }
+
+    /* ─────────────────────────────────────────────
+       SLIDER ROW LAYOUT
+       ───────────────────────────────────────────── */
+    .controls-section {
+      position: absolute;
+      top: 172px;
+      left: 30px;
+      width: 620px;
+    }
+
+    .slider-row {
+      width: 620px;
+      margin-bottom: 14px;
+    }
+
+    .slider-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .slider-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 7px;
+    }
+
+    .slider-label {
+      font-size: 8.5px;
+      font-weight: normal;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .slider-value {
+      font-size: 11px;
+      font-weight: normal;
+      letter-spacing: 0.08em;
+      color: var(--text-cream);
+      font-variant-numeric: tabular-nums;
+      min-width: 48px;
+      text-align: right;
+    }
+
+    /* ─────────────────────────────────────────────
+       CUSTOM SLIDER — Vintage Bakelite Track & Thumb
+       ───────────────────────────────────────────── */
+    .bakelite-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 620px;
+      height: 24px;
+      background: transparent;
+      outline: none;
+      cursor: pointer;
+      display: block;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Track */
+    .bakelite-slider::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 5px;
+      background: linear-gradient(to bottom, #0e0400, #1a0a02);
+      box-shadow:
+        inset 0 2px 5px rgba(0,0,0,0.65),
+        inset 0 1px 2px rgba(0,0,0,0.45),
+        0 1px 0 rgba(212,180,148,0.06);
+      border: 1px solid #1a0800;
+    }
+
+    .bakelite-slider::-moz-range-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 5px;
+      background: linear-gradient(to bottom, #0e0400, #1a0a02);
+      box-shadow:
+        inset 0 2px 5px rgba(0,0,0,0.65),
+        inset 0 1px 2px rgba(0,0,0,0.45);
+      border: 1px solid #1a0800;
+    }
+
+    /* Thumb */
+    .bakelite-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      margin-top: -7px;
+      background: radial-gradient(circle at 38% 32%, #6a4828, #3a2010 70%, #2a1408);
+      box-shadow:
+        0 2px 6px rgba(0,0,0,0.60),
+        0 1px 2px rgba(0,0,0,0.40),
+        inset 0 1px 0 rgba(212,180,148,0.18),
+        inset 0 -1px 0 rgba(0,0,0,0.35);
+      border: 1px solid #1a0a04;
+      cursor: grab;
+      transition: box-shadow 0.08s ease;
+    }
+
+    .bakelite-slider::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      box-shadow:
+        0 1px 3px rgba(0,0,0,0.60),
+        inset 0 1px 0 rgba(212,180,148,0.10),
+        inset 0 -1px 0 rgba(0,0,0,0.4);
+    }
+
+    .bakelite-slider::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 32%, #6a4828, #3a2010 70%, #2a1408);
+      box-shadow:
+        0 2px 6px rgba(0,0,0,0.60),
+        0 1px 2px rgba(0,0,0,0.40),
+        inset 0 1px 0 rgba(212,180,148,0.18);
+      border: 1px solid #1a0a04;
+      cursor: grab;
+    }
+
+    /* Fill track via JS-driven background (see script) */
+    .bakelite-slider.has-fill::-webkit-slider-runnable-track {
+      background: linear-gradient(
+        to right,
+        var(--fill-end, #3a2010) 0%,
+        var(--fill-end, #3a2010) var(--fill-pct, 0%),
+        #0e0400 var(--fill-pct, 0%),
+        #1a0a02 100%
+      );
+    }
+
+    /* ─────────────────────────────────────────────
+       ACTION ROW
+       ───────────────────────────────────────────── */
+    .action-row {
+      position: absolute;
+      top: 416px;
+      left: 30px;
+      width: 620px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Play / Stop transport button */
+    .btn-transport {
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+      background: linear-gradient(to bottom, #3a2010, #2a1008);
+      border: 1px solid #2a1408;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      transition: background 0.1s, box-shadow 0.1s;
+      box-shadow:
+        0 3px 8px rgba(0,0,0,0.50),
+        inset 0 1px 0 rgba(212,180,148,0.10),
+        inset 0 -1px 0 rgba(0,0,0,0.3);
+    }
+
+    .btn-transport:hover {
+      background: linear-gradient(to bottom, #4a3020, #3a2010);
+      border-color: rgba(196,149,100,0.45);
+    }
+
+    .btn-transport:active,
+    .btn-transport.playing {
+      background: linear-gradient(to bottom, #2a1808, #3a2010);
+      box-shadow:
+        0 1px 3px rgba(0,0,0,0.50),
+        inset 0 2px 4px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(0,0,0,0.2);
+    }
+
+    .btn-transport.playing {
+      border-color: rgba(196,149,100,0.40);
+    }
+
+    .transport-icon {
+      width: 18px;
+      height: 18px;
+      fill: var(--text-primary);
+      transition: fill 0.1s;
+    }
+
+    .btn-transport.playing .transport-icon {
+      fill: var(--text-cream);
+    }
+
+    /* Generate CTA button */
+    .btn-generate {
+      flex: 1;
+      height: 52px;
+      background: linear-gradient(to bottom, #3a2010, #2a1008);
+      border: 1px solid #3a1c08;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-cream);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: normal;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(212,180,148,0.12),
+        inset 0 -1px 0 rgba(0,0,0,0.35);
+    }
+
+    .btn-generate:hover {
+      background: linear-gradient(to bottom, #4a2c16, #3a1c08);
+      border-color: rgba(196,149,100,0.60);
+      box-shadow:
+        0 4px 16px rgba(0,0,0,0.60),
+        0 0 12px rgba(196,149,100,0.10),
+        inset 0 1px 0 rgba(212,180,148,0.16),
+        inset 0 -1px 0 rgba(0,0,0,0.35);
+    }
+
+    .btn-generate:active {
+      background: linear-gradient(to bottom, #2a1408, #3a1c08);
+      box-shadow:
+        0 1px 4px rgba(0,0,0,0.55),
+        inset 0 2px 6px rgba(0,0,0,0.45),
+        inset 0 -1px 0 rgba(0,0,0,0.2);
+    }
+
+    .btn-generate.generating {
+      cursor: not-allowed;
+      color: var(--text-primary);
+      border-color: rgba(212,180,148,0.20);
+    }
+
+    .generate-spinner {
+      width: 12px;
+      height: 12px;
+      border: 1.5px solid rgba(212,180,148,0.20);
+      border-top-color: var(--text-cream);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    .btn-generate.generating .generate-spinner {
+      display: block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Download button */
+    .btn-download {
+      width: 168px;
+      flex-shrink: 0;
+      height: 52px;
+      background: linear-gradient(to bottom, #2a1808, #1e1004);
+      border: 1px solid #2a1408;
+      border-radius: 3px;
+      cursor: not-allowed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 9px;
+      font-weight: normal;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: all 0.15s;
+      box-shadow:
+        0 2px 6px rgba(0,0,0,0.40),
+        inset 0 1px 0 rgba(212,180,148,0.04),
+        inset 0 -1px 0 rgba(0,0,0,0.25);
+    }
+
+    .btn-download.active {
+      cursor: pointer;
+      background: linear-gradient(to bottom, #3a2010, #2a1008);
+      border-color: rgba(196,149,100,0.30);
+      color: var(--text-primary);
+      box-shadow:
+        0 3px 10px rgba(0,0,0,0.50),
+        inset 0 1px 0 rgba(212,180,148,0.10),
+        inset 0 -1px 0 rgba(0,0,0,0.30);
+    }
+
+    .btn-download.active:hover {
+      border-color: rgba(196,149,100,0.55);
+      color: var(--text-cream);
+    }
+
+    .btn-download.active:active {
+      box-shadow:
+        0 1px 3px rgba(0,0,0,0.50),
+        inset 0 2px 5px rgba(0,0,0,0.40);
+    }
+
+    .btn-icon {
+      opacity: 0.6;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .btn-download .btn-icon {
+      opacity: 0.3;
+    }
+
+    .btn-download.active .btn-icon {
+      opacity: 0.7;
+    }
+
+    /* ─────────────────────────────────────────────
+       STATUS BAR
+       ───────────────────────────────────────────── */
+    .status-bar {
+      position: absolute;
+      top: 484px;
+      left: 30px;
+      width: 620px;
+      height: 88px;
+    }
+
+    /* Divider line above status bar */
+    .status-bar::before {
+      content: "";
+      display: block;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(to right,
+        transparent,
+        rgba(212,180,148,0.10) 20%,
+        rgba(212,180,148,0.10) 80%,
+        transparent
+      );
+      margin-bottom: 12px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .status-dot.ready    { background: #5a3a20; }
+    .status-dot.active   { background: #c49564; box-shadow: 0 0 6px rgba(196,149,100,0.45); }
+    .status-dot.complete { background: #7a8a4a; box-shadow: 0 0 6px rgba(120,140,70,0.35); }
+    .status-dot.error    { background: #aa3a3a; box-shadow: 0 0 6px rgba(170,60,60,0.40); }
+
+    .status-text {
+      font-size: 9px;
+      letter-spacing: 0.20em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      flex: 1;
+      margin-left: 10px;
+      transition: color 0.2s;
+    }
+
+    .status-text.active   { color: var(--text-cream); }
+    .status-text.complete { color: var(--accent-hover); }
+    .status-text.error    { color: #cc5555; }
+
+    .status-stage {
+      font-size: 8px;
+      letter-spacing: 0.10em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    /* Progress bar container */
+    .progress-track {
+      width: 620px;
+      height: 6px;
+      background: var(--bg-recess);
+      border-radius: 3px;
+      overflow: hidden;
+      box-shadow:
+        inset 0 2px 4px rgba(0,0,0,0.55),
+        inset 0 1px 2px rgba(0,0,0,0.35);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .progress-track.visible {
+      opacity: 1;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      background: linear-gradient(to right, #3a1e08, #c49564);
+      box-shadow: 0 0 8px rgba(196,149,100,0.35);
+      transition: width 0.12s ease-out;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- ─── HEADER ─── -->
+    <div class="header">
+      <div class="app-title">Piano Transformer</div>
+      <div class="app-subtitle">AI Piano MIDI Generator</div>
+    </div>
+
+    <!-- ─── DROPZONE ─── -->
+    <div class="dropzone" id="dropzone" title="Click to browse or drag a .mid file">
+
+      <div class="dropzone-empty" id="dropzone-empty">
+        <div class="dropzone-arrow"></div>
+        <div class="dropzone-label">Drop Seed MIDI &nbsp;—&nbsp; Optional Primer</div>
+      </div>
+
+      <div class="dropzone-loaded" id="dropzone-loaded">
+        <div class="dropzone-filename" id="dropzone-filename">seed.mid</div>
+        <div class="dropzone-clear" id="dropzone-clear" title="Clear seed file">&times;</div>
+      </div>
+
+    </div>
+
+    <!-- ─── CONTROLS ─── -->
+    <div class="controls-section">
+
+      <!-- Temperature -->
+      <div class="slider-row">
+        <div class="slider-meta">
+          <span class="slider-label">Temperature</span>
+          <span class="slider-value" id="val-temperature">1.00</span>
+        </div>
+        <input
+          type="range"
+          class="bakelite-slider"
+          id="temperature"
+          min="0.1"
+          max="2.0"
+          step="0.01"
+          value="1.0"
+        />
+      </div>
+
+      <!-- Sequence Length -->
+      <div class="slider-row">
+        <div class="slider-meta">
+          <span class="slider-label">Sequence Length</span>
+          <span class="slider-value" id="val-sequence_length">512</span>
+        </div>
+        <input
+          type="range"
+          class="bakelite-slider"
+          id="sequence_length"
+          min="128"
+          max="2048"
+          step="1"
+          value="512"
+        />
+      </div>
+
+      <!-- Primer Length -->
+      <div class="slider-row">
+        <div class="slider-meta">
+          <span class="slider-label">Primer Length</span>
+          <span class="slider-value" id="val-primer_length">64</span>
+        </div>
+        <input
+          type="range"
+          class="bakelite-slider"
+          id="primer_length"
+          min="0"
+          max="512"
+          step="1"
+          value="64"
+        />
+      </div>
+
+      <!-- Tempo -->
+      <div class="slider-row">
+        <div class="slider-meta">
+          <span class="slider-label">Tempo</span>
+          <span class="slider-value" id="val-tempo">120 BPM</span>
+        </div>
+        <input
+          type="range"
+          class="bakelite-slider"
+          id="tempo"
+          min="40"
+          max="200"
+          step="1"
+          value="120"
+        />
+      </div>
+
+    </div>
+
+    <!-- ─── ACTION ROW ─── -->
+    <div class="action-row">
+
+      <!-- Play / Stop -->
+      <button class="btn-transport" id="btn-transport" title="Play / Stop preview">
+        <svg class="transport-icon" id="transport-icon" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <!-- Play triangle -->
+          <polygon id="icon-play" points="4,2 16,9 4,16" fill="currentColor"/>
+          <!-- Stop square (hidden by default) -->
+          <rect id="icon-stop" x="3" y="3" width="12" height="12" fill="currentColor" style="display:none;"/>
+        </svg>
+      </button>
+
+      <!-- Generate -->
+      <button class="btn-generate" id="btn-generate">
+        <div class="generate-spinner" id="generate-spinner"></div>
+        <span id="generate-label">Generate</span>
+      </button>
+
+      <!-- Download -->
+      <button class="btn-download" id="btn-download" disabled title="Generate first">
+        <span class="btn-icon">&#x2193;</span>
+        <span>Download .mid</span>
+      </button>
+
+    </div>
+
+    <!-- ─── STATUS BAR ─── -->
+    <div class="status-bar">
+      <div class="status-row">
+        <div class="status-dot ready" id="status-dot"></div>
+        <div class="status-text" id="status-text">Ready</div>
+        <div class="status-stage" id="status-stage"></div>
+      </div>
+      <div class="progress-track" id="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+  </div><!-- /.app-shell -->
+
+  <script>
+    // ─────────────────────────────────────────────────────────
+    // MOCK JUCE / ELECTRON BACKEND (browser testing only)
+    // ─────────────────────────────────────────────────────────
+    window.Juce = {
+      getSliderState: (id) => ({
+        normalisedValue: 0.5,
+        valueChangedEvent: {
+          addListener: (fn) => console.log(`[Juce] Listener added for slider: ${id}`)
+        }
+      }),
+      getToggleState: (id) => ({
+        value: false,
+        valueChangedEvent: {
+          addListener: (fn) => console.log(`[Juce] Listener added for toggle: ${id}`)
+        }
+      })
+    };
+
+    // Disable context menu
+    document.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    // ─────────────────────────────────────────────────────────
+    // SLIDER FILL — CSS custom property trick
+    // Maps each slider's value to a --fill-pct on the element.
+    // The ::-webkit-slider-runnable-track background uses it.
+    // ─────────────────────────────────────────────────────────
+    function updateSliderFill(slider) {
+      const min  = parseFloat(slider.min);
+      const max  = parseFloat(slider.max);
+      const val  = parseFloat(slider.value);
+      const pct  = ((val - min) / (max - min)) * 100;
+      slider.style.setProperty("--fill-pct", pct.toFixed(2) + "%");
+      slider.classList.add("has-fill");
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // PARAMETER DISPLAY CONFIG
+    // ─────────────────────────────────────────────────────────
+    const sliderConfig = {
+      temperature:     { precision: 2, unit: "",    min: 0.1,  max: 2.0  },
+      sequence_length: { precision: 0, unit: "",    min: 128,  max: 2048 },
+      primer_length:   { precision: 0, unit: "",    min: 0,    max: 512  },
+      tempo:           { precision: 0, unit: " BPM", min: 40,  max: 200  },
+    };
+
+    function formatValue(id, raw) {
+      const cfg = sliderConfig[id];
+      if (!cfg) return raw;
+      const n = parseFloat(raw);
+      return n.toFixed(cfg.precision) + cfg.unit;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // INIT SLIDERS
+    // ─────────────────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const sliders = document.querySelectorAll(".bakelite-slider");
+
+      sliders.forEach((slider) => {
+        // Initial fill & display
+        updateSliderFill(slider);
+
+        const display = document.getElementById("val-" + slider.id);
+
+        if (display) {
+          display.textContent = formatValue(slider.id, slider.value);
+        }
+
+        // Live update on drag
+        slider.addEventListener("input", () => {
+          updateSliderFill(slider);
+          if (display) {
+            display.textContent = formatValue(slider.id, slider.value);
+          }
+          console.log(`[Param] ${slider.id} = ${slider.value}`);
+
+          // Hook into mock Juce
+          const state = Juce.getSliderState(slider.id);
+          const range  = parseFloat(slider.max) - parseFloat(slider.min);
+          state.normalisedValue = (parseFloat(slider.value) - parseFloat(slider.min)) / range;
+        });
+      });
+
+      // ─────────────────────────────────────────────────────
+      // DROPZONE
+      // ─────────────────────────────────────────────────────
+      const zone      = document.getElementById("dropzone");
+      const emptyEl   = document.getElementById("dropzone-empty");
+      const loadedEl  = document.getElementById("dropzone-loaded");
+      const filenameEl = document.getElementById("dropzone-filename");
+      const clearBtn  = document.getElementById("dropzone-clear");
+
+      function showFile(name) {
+        filenameEl.textContent = name.toUpperCase();
+        emptyEl.style.display  = "none";
+        loadedEl.style.display = "flex";
+        console.log(`[Dropzone] Seed file loaded: ${name}`);
+      }
+
+      function clearFile() {
+        emptyEl.style.display  = "flex";
+        loadedEl.style.display = "none";
+        console.log("[Dropzone] Seed file cleared");
+      }
+
+      // Click to simulate file pick
+      zone.addEventListener("click", (e) => {
+        if (e.target === clearBtn || clearBtn.contains(e.target)) return;
+        showFile("concert-etude-seed.mid");
+      });
+
+      clearBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        clearFile();
+      });
+
+      zone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        zone.classList.add("drag-over");
+      });
+
+      zone.addEventListener("dragleave", () => {
+        zone.classList.remove("drag-over");
+      });
+
+      zone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        zone.classList.remove("drag-over");
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          showFile(files[0].name);
+        }
+      });
+
+      // ─────────────────────────────────────────────────────
+      // TRANSPORT — Play / Stop
+      // ─────────────────────────────────────────────────────
+      const transportBtn  = document.getElementById("btn-transport");
+      const iconPlay      = document.getElementById("icon-play");
+      const iconStop      = document.getElementById("icon-stop");
+      let isPlaying       = false;
+
+      transportBtn.addEventListener("click", () => {
+        isPlaying = !isPlaying;
+        transportBtn.classList.toggle("playing", isPlaying);
+        iconPlay.style.display = isPlaying ? "none"  : "inline";
+        iconStop.style.display = isPlaying ? "inline" : "none";
+        console.log(`[Transport] ${isPlaying ? "PLAY" : "STOP"}`);
+      });
+
+      // ─────────────────────────────────────────────────────
+      // GENERATE — 3-second sim with non-linear easing
+      // Fast to ~78% then slows (like model inference)
+      // ─────────────────────────────────────────────────────
+      const generateBtn  = document.getElementById("btn-generate");
+      const generateLbl  = document.getElementById("generate-label");
+      const downloadBtn  = document.getElementById("btn-download");
+      const statusDot    = document.getElementById("status-dot");
+      const statusText   = document.getElementById("status-text");
+      const statusStage  = document.getElementById("status-stage");
+      const progressTrack = document.getElementById("progress-track");
+      const progressFill  = document.getElementById("progress-fill");
+      let isGenerating    = false;
+      let generationDone  = false;
+
+      function setStatus(state, text, stage) {
+        statusDot.className   = "status-dot " + state;
+        statusText.className  = "status-text " + (state !== "ready" ? state : "");
+        statusText.textContent = text;
+        statusStage.textContent = stage || "";
+      }
+
+      function easeGenerationProgress(t) {
+        // Non-linear: cubic ease to 78% in first 60% of time, then logarithmic crawl
+        if (t < 0.60) {
+          // Fast phase — cubic ease-in-out mapped to 0–78%
+          const u = t / 0.60;
+          return 0.78 * (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+        } else {
+          // Slow phase — 78% to 97% over remaining 40%
+          const u = (t - 0.60) / 0.40;
+          return 0.78 + 0.19 * (1 - Math.exp(-3.5 * u));
+        }
+      }
+
+      generateBtn.addEventListener("click", () => {
+        if (isGenerating) return;
+
+        isGenerating   = true;
+        generationDone = false;
+        generateBtn.classList.add("generating");
+        generateLbl.textContent = "Generating...";
+        downloadBtn.classList.remove("active");
+        downloadBtn.disabled = true;
+        progressTrack.classList.add("visible");
+        progressFill.style.width = "0%";
+        setStatus("active", "Generating...", "Sampling tokens");
+
+        // Stop transport if playing
+        if (isPlaying) {
+          isPlaying = false;
+          transportBtn.classList.remove("playing");
+          iconPlay.style.display = "inline";
+          iconStop.style.display = "none";
+        }
+
+        const DURATION   = 3000; // ms
+        const startTime  = performance.now();
+
+        const stageLabels = [
+          [0.0,  "Loading model"],
+          [0.08, "Encoding primer"],
+          [0.20, "Sampling tokens"],
+          [0.75, "Finalising MIDI"],
+        ];
+
+        function getStageLabel(progress) {
+          let label = stageLabels[0][1];
+          for (const [threshold, text] of stageLabels) {
+            if (progress >= threshold) label = text;
+          }
+          return label;
+        }
+
+        function tick(now) {
+          const elapsed  = now - startTime;
+          const t        = Math.min(elapsed / DURATION, 1.0);
+          const progress = easeGenerationProgress(t);
+          const pct      = (progress * 100).toFixed(1);
+
+          progressFill.style.width = pct + "%";
+          statusStage.textContent  = getStageLabel(progress);
+
+          if (t < 1.0) {
+            requestAnimationFrame(tick);
+          } else {
+            // Complete
+            progressFill.style.width = "100%";
+            setTimeout(() => {
+              isGenerating = false;
+              generationDone = true;
+              generateBtn.classList.remove("generating");
+              generateLbl.textContent = "Generate";
+              progressTrack.classList.remove("visible");
+              progressFill.style.width = "0%";
+              setStatus("complete", "Complete", "");
+              downloadBtn.classList.add("active");
+              downloadBtn.disabled = false;
+              downloadBtn.title    = "Download generated MIDI";
+              console.log("[Generate] Generation complete — download ready");
+            }, 250);
+          }
+        }
+
+        requestAnimationFrame(tick);
+      });
+
+      // ─────────────────────────────────────────────────────
+      // DOWNLOAD
+      // ─────────────────────────────────────────────────────
+      downloadBtn.addEventListener("click", () => {
+        if (!generationDone) return;
+        console.log("[Download] Download .mid triggered");
+        // In Electron: ipcRenderer.send("save-midi", midiData)
+        // In browser test: just log
+        setStatus("complete", "Complete", "File saved");
+      });
+
+    }); // DOMContentLoaded
+
+  </script>
+</body>
+</html>
