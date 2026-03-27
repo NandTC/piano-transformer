@@ -1,0 +1,319 @@
+/* ─────────────────────────────────────────────
+   RESET
+   ───────────────────────────────────────────── */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ─────────────────────────────────────────────
+   DESIGN TOKENS — Swiss Minimal
+   ───────────────────────────────────────────── */
+:root {
+  --bg:             #FFFFFF;
+  --text-primary:   #000000;
+  --text-secondary: #666666;
+  --text-muted:     #999999;
+  --border:         #000000;
+  --border-width:   2px;
+  --btn-fill:       #000000;
+  --btn-text:       #FFFFFF;
+  --btn-disabled:   #CCCCCC;
+  --slider-track:   #FFFFFF;
+  --slider-thumb:   #000000;
+  --edge:           28px;
+  --gap:            20px;
+}
+
+/* ─────────────────────────────────────────────
+   BODY
+   ───────────────────────────────────────────── */
+body {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+  overflow: hidden;
+  background: #FFFFFF;
+  font-family: Inter, "DM Sans", Helvetica, Arial, system-ui, sans-serif;
+  color: var(--text-primary);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* ─────────────────────────────────────────────
+   APP SHELL — 640 × 560 fixed
+   ───────────────────────────────────────────── */
+.app-shell {
+  width: 640px;
+  height: 560px;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────
+   CONTENT AREA
+   ───────────────────────────────────────────── */
+.content {
+  position: absolute;
+  top: var(--edge);
+  left: var(--edge);
+  right: var(--edge);
+  bottom: var(--edge);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* ─────────────────────────────────────────────
+   HEADER
+   ───────────────────────────────────────────── */
+.header {
+  flex-shrink: 0;
+}
+
+.header__title {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin: 0 0 5px 0;
+  letter-spacing: -0.01em;
+}
+
+.header__subtitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1;
+}
+
+/* ─────────────────────────────────────────────
+   DROPZONE
+   ───────────────────────────────────────────── */
+.dropzone {
+  flex-shrink: 0;
+  height: 60px;
+  background: var(--bg);
+  border: var(--border-width) solid var(--border);
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropzone::before {
+  content: "";
+  position: absolute;
+  top: 7px; left: 7px; right: 7px; bottom: 7px;
+  border: 1px dashed #999999;
+  pointer-events: none;
+}
+
+.dropzone__label {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.dropzone__loaded {
+  display: none;
+  width: 100%;
+  padding: 0 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dropzone__filename {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.dropzone__clear {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-primary);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  pointer-events: all;
+  background: none;
+  border: none;
+  font-family: inherit;
+}
+
+.dropzone.drag-over {
+  background: #F5F5F5;
+}
+
+.dropzone.is-loaded .dropzone__label {
+  display: none;
+}
+
+.dropzone.is-loaded .dropzone__loaded {
+  display: flex;
+}
+
+/* ─────────────────────────────────────────────
+   CONTROLS — Slider rows
+   ───────────────────────────────────────────── */
+.controls {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slider-row__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.slider-row__label {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.slider-row__value {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─────────────────────────────────────────────
+   SLIDER — Swiss precision input
+   ───────────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: var(--slider-track);
+  border: var(--border-width) solid var(--border);
+  outline: none;
+  cursor: pointer;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 24px;
+  background: var(--slider-thumb);
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  margin-top: -4px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 24px;
+  background: var(--slider-thumb);
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 16px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 16px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+/* Disabled state */
+input[type="range"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────
+   ACTION ROW — buttons
+   ───────────────────────────────────────────── */
+.actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  height: 40px;
+}
+
+.btn {
+  height: 40px;
+  background: var(--btn-fill);
+  color: var(--btn-text);
+  border: none;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+
+.btn:disabled {
+  background: var(--btn-disabled);
+  cursor: not-allowed;
+}
+
+.btn--play {
+  flex: 0 0 102px;
+}
+
+.btn--generate {
+  flex: 1 1 auto;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.btn--download {
+  flex: 0 0 194px;
+}
+
+/* ─────────────────────────────────────────────
+   STATUS LINE
+   ───────────────────────────────────────────── */
+.status {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1;
+  margin-top: auto;
+}
+
+.status.is-active {
+  color: var(--text-primary);
+}

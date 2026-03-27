@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>Piano Transformer</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <div class="app-shell">
+    <div class="content">
+
+      <!-- ── HEADER ── -->
+      <header class="header">
+        <h1 class="header__title">Piano Transformer</h1>
+        <p class="header__subtitle">AI Piano MIDI Generator</p>
+      </header>
+
+      <!-- ── DROPZONE ── -->
+      <div
+        class="dropzone"
+        id="dropzone"
+        title="Click to select a seed MIDI file, or drag one here"
+      >
+        <span class="dropzone__label">Drop seed MIDI — optional</span>
+        <div class="dropzone__loaded" id="dropzone-loaded">
+          <span class="dropzone__filename" id="dropzone-filename"></span>
+          <button class="dropzone__clear" id="dropzone-clear" title="Clear">×</button>
+        </div>
+      </div>
+
+      <!-- ── CONTROLS ── -->
+      <div class="controls">
+
+        <!-- Temperature -->
+        <div class="slider-row">
+          <div class="slider-row__meta">
+            <span class="slider-row__label">Temperature</span>
+            <span class="slider-row__value" id="temperature-display">1.00</span>
+          </div>
+          <input type="range" id="temperature" min="0.1" max="2.0" step="0.01" value="1.0" />
+        </div>
+
+        <!-- Sequence Length -->
+        <div class="slider-row">
+          <div class="slider-row__meta">
+            <span class="slider-row__label">Sequence Length</span>
+            <span class="slider-row__value" id="sequence-length-display">512 steps</span>
+          </div>
+          <input type="range" id="sequence-length" min="128" max="2048" step="1" value="512" />
+        </div>
+
+        <!-- Primer Length -->
+        <div class="slider-row">
+          <div class="slider-row__meta">
+            <span class="slider-row__label">Primer Length</span>
+            <span class="slider-row__value" id="primer-length-display">64 steps</span>
+          </div>
+          <input type="range" id="primer-length" min="0" max="512" step="1" value="64" />
+        </div>
+
+        <!-- Tempo -->
+        <div class="slider-row">
+          <div class="slider-row__meta">
+            <span class="slider-row__label">Tempo</span>
+            <span class="slider-row__value" id="tempo-display">120 BPM</span>
+          </div>
+          <input type="range" id="tempo" min="40" max="200" step="1" value="120" />
+        </div>
+
+      </div>
+
+      <!-- ── ACTIONS ── -->
+      <div class="actions">
+        <button class="btn btn--play" id="btn-play" disabled>Play</button>
+        <button class="btn btn--generate" id="btn-generate" disabled>Generate</button>
+        <button class="btn btn--download" id="btn-download" disabled>Download .mid</button>
+      </div>
+
+      <!-- ── STATUS ── -->
+      <div class="status" id="status-line">Loading model…</div>
+
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

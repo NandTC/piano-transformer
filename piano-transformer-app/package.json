@@ -1,0 +1,50 @@
+{
+  "name": "piano-transformer",
+  "version": "1.0.0",
+  "description": "AI Piano MIDI Generator powered by Google Magenta Music Transformer",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.pluginfreedom.piano-transformer",
+    "productName": "Piano Transformer",
+    "copyright": "Copyright © 2025 Plugin Freedom",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "resources/python-env/**/*",
+      "resources/model-checkpoint/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "icon": "assets/icon.icns",
+      "target": [
+        { "target": "dmg", "arch": ["arm64"] }
+      ]
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "extraResources": [
+      {
+        "from": "resources/",
+        "to": "resources/"
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}
