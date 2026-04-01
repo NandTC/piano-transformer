@@ -1,0 +1,100 @@
+name: Build 4-Stem
+
+# Trigger: push a version tag (e.g. git tag v1.0.0 && git push --tags)
+# Or run manually from the Actions tab
+on:
+  push:
+    tags: ['4stem-v*']
+  workflow_dispatch:
+
+jobs:
+  # ─────────────────────────────────────────────
+  # macOS — Apple Silicon DMG
+  # ─────────────────────────────────────────────
+  build-mac:
+    runs-on: macos-14        # Apple Silicon (M1)
+    defaults:
+      run:
+        working-directory: 4-stem-app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install flask audio-separator onnxruntime pyinstaller
+
+      - name: Build Python sidecar (PyInstaller)
+        working-directory: 4-stem-app/python
+        run: pyinstaller sidecar.spec --distpath dist --workpath build
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build Mac DMG (signed + notarized)
+        run: npm run build:mac
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Upload Mac DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: 4-stem-mac-dmg
+          path: 4-stem-app/dist/*.dmg
+          retention-days: 30
+
+  # ─────────────────────────────────────────────
+  # Windows — NSIS installer (.exe)
+  # ─────────────────────────────────────────────
+  build-win:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: 4-stem-app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install flask audio-separator onnxruntime pyinstaller
+
+      - name: Build Python sidecar (PyInstaller)
+        working-directory: 4-stem-app/python
+        run: pyinstaller sidecar.spec --distpath dist --workpath build
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build Windows installer
+        run: npm run build:win
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: 4-stem-win-installer
+          path: 4-stem-app/dist/*.exe
+          retention-days: 30

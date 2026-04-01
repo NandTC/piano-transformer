@@ -1,0 +1,42 @@
+{
+  "name": "4-stem",
+  "version": "1.0.0",
+  "description": "AI 4-Stem Audio Separator powered by Meta Demucs",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.pluginfreedom.4-stem",
+    "productName": "4-Stem",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "preload.js", "src/**/*"],
+    "extraResources": [
+      {
+        "from": "python/dist/sidecar",
+        "to": "sidecar"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }],
+      "notarize": {
+        "teamId": "${APPLE_TEAM_ID}"
+      }
+    },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}
