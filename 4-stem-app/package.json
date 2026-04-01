@@ -2,6 +2,11 @@
   "name": "4-stem",
   "version": "1.0.0",
   "description": "AI 4-Stem Audio Separator powered by Meta Demucs",
+  "author": "NandTC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NandTC/piano-transformer.git"
+  },
   "main": "main.js",
   "scripts": {
     "start": "electron .",
