@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src 'self' blob: file:;" />
+  <title>4-Stem</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <div class="app-shell">
+    <div class="content">
+
+      <!-- HEADER -->
+      <header class="header">
+        <h1 class="header__title">4-Stem</h1>
+        <p class="header__subtitle">AI Audio Stem Separator</p>
+      </header>
+
+      <!-- DROPZONE -->
+      <div class="dropzone" id="dropzone" title="Click to select an audio file, or drag one here">
+        <span class="dropzone__label">Drop audio file — MP3, WAV, FLAC, AIFF</span>
+        <div class="dropzone__loaded" id="dropzone-loaded">
+          <span class="dropzone__filename" id="dropzone-filename"></span>
+          <button class="dropzone__clear" id="dropzone-clear" title="Clear">×</button>
+        </div>
+      </div>
+
+      <!-- PROGRESS BAR -->
+      <div class="progress-wrap" id="progress-wrap" style="display:none">
+        <div class="progress-bar">
+          <div class="progress-bar__fill" id="progress-fill"></div>
+        </div>
+        <span class="progress-label" id="progress-label">0%</span>
+      </div>
+
+      <!-- STEM CARDS (2×2 grid) -->
+      <div class="stem-grid" id="stem-grid">
+
+        <div class="stem-card stem-card--vocals" id="card-vocals">
+          <div class="stem-card__name">Vocals</div>
+          <div class="stem-card__viz" id="viz-vocals">
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+          </div>
+          <div class="stem-card__actions">
+            <button class="stem-btn stem-btn--play" id="play-vocals">Play</button>
+            <button class="stem-btn stem-btn--save" id="save-vocals">Save</button>
+          </div>
+        </div>
+
+        <div class="stem-card stem-card--drums" id="card-drums">
+          <div class="stem-card__name">Drums</div>
+          <div class="stem-card__viz" id="viz-drums">
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+          </div>
+          <div class="stem-card__actions">
+            <button class="stem-btn stem-btn--play" id="play-drums">Play</button>
+            <button class="stem-btn stem-btn--save" id="save-drums">Save</button>
+          </div>
+        </div>
+
+        <div class="stem-card stem-card--bass" id="card-bass">
+          <div class="stem-card__name">Bass</div>
+          <div class="stem-card__viz" id="viz-bass">
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+          </div>
+          <div class="stem-card__actions">
+            <button class="stem-btn stem-btn--play" id="play-bass">Play</button>
+            <button class="stem-btn stem-btn--save" id="save-bass">Save</button>
+          </div>
+        </div>
+
+        <div class="stem-card stem-card--other" id="card-other">
+          <div class="stem-card__name">Other</div>
+          <div class="stem-card__viz" id="viz-other">
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+          </div>
+          <div class="stem-card__actions">
+            <button class="stem-btn stem-btn--play" id="play-other">Play</button>
+            <button class="stem-btn stem-btn--save" id="save-other">Save</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="actions">
+        <button class="btn btn--separate" id="btn-separate" disabled>Separate</button>
+        <button class="btn btn--save-all" id="btn-save-all" disabled>Save All Stems</button>
+      </div>
+
+      <!-- STATUS -->
+      <div class="status" id="status-line">Ready</div>
+
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
