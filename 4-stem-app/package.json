@@ -27,9 +27,14 @@
     "mac": {
       "category": "public.app-category.music",
       "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }],
-      "notarize": {
-        "teamId": "${APPLE_TEAM_ID}"
-      }
+      "hardenedRuntime": true,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "NandTC",
+      "repo": "piano-transformer"
     },
     "win": {
       "target": [{ "target": "nsis", "arch": ["x64"] }]

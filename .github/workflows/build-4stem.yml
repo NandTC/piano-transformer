@@ -7,6 +7,9 @@ on:
     tags: ['4stem-v*']
   workflow_dispatch:
 
+permissions:
+  contents: write   # needed to create GitHub Releases
+
 jobs:
   # ─────────────────────────────────────────────
   # macOS — Apple Silicon DMG
