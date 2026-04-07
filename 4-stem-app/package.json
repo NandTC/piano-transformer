@@ -43,7 +43,8 @@
       ],
       "hardenedRuntime": true,
       "entitlements": "entitlements.mac.plist",
-      "entitlementsInherit": "entitlements.mac.plist"
+      "entitlementsInherit": "entitlements.mac.plist",
+      "notarize": false
     },
     "afterSign": "scripts/notarize.js",
     "publish": {
