@@ -25,6 +25,75 @@
     saveBtns[s] = document.getElementById(`save-${s}`);
   });
 
+  // ─── Waveform canvas ─────────────────────────────────────────────────────────
+  const STEM_COLORS = { vocals: "#FF2D78", drums: "#00F5D4", bass: "#FFE000", other: "#FF6B00" };
+
+  // Per-stem waveform character: [freq1, freq2, freq3], [amp1, amp2, amp3], animSpeed
+  const WF_CFG = {
+    vocals: { f: [5, 11, 2.5], a: [9, 4, 6],   spd: 1.2 },
+    drums:  { f: [11, 22, 5],  a: [13, 5, 3],  spd: 2.2 },
+    bass:   { f: [2.5, 5, 1],  a: [13, 6, 8],  spd: 0.6 },
+    other:  { f: [7, 15, 3.5], a: [9, 5, 5],   spd: 1.0 },
+  };
+
+  const wfPhase  = { vocals: 0, drums: 0, bass: 0, other: 0 };
+  const wfAnimId = {};
+
+  function drawWaveform(stem, playing, phase) {
+    const canvas = document.getElementById(`wf-${stem}`);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const cfg   = WF_CFG[stem];
+    const color = STEM_COLORS[stem];
+
+    ctx.beginPath();
+    ctx.strokeStyle = playing ? color : "rgba(255,255,255,0.18)";
+    ctx.lineWidth   = 1.5;
+    ctx.shadowColor = playing ? color : "transparent";
+    ctx.shadowBlur  = playing ? 8 : 0;
+
+    const cy = H / 2;
+    for (let x = 0; x <= W; x++) {
+      const t   = x / W;
+      const env = Math.sin(t * Math.PI); // fade at edges
+      let y = cy;
+      for (let i = 0; i < 3; i++) {
+        y += Math.sin(t * Math.PI * cfg.f[i] + phase * (i + 1) * 0.6) * cfg.a[i] * env;
+      }
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  function initWaveforms() {
+    STEMS.forEach(stem => {
+      const canvas = document.getElementById(`wf-${stem}`);
+      if (!canvas) return;
+      canvas.width  = canvas.offsetWidth  || 260;
+      canvas.height = canvas.offsetHeight || 48;
+      drawWaveform(stem, false, 0);
+    });
+  }
+
+  function startWaveformAnim(stem) {
+    stopWaveformAnim(stem);
+    const cfg = WF_CFG[stem];
+    function frame() {
+      wfPhase[stem] += 0.04 * cfg.spd;
+      drawWaveform(stem, true, wfPhase[stem]);
+      wfAnimId[stem] = requestAnimationFrame(frame);
+    }
+    wfAnimId[stem] = requestAnimationFrame(frame);
+  }
+
+  function stopWaveformAnim(stem) {
+    if (wfAnimId[stem]) { cancelAnimationFrame(wfAnimId[stem]); wfAnimId[stem] = null; }
+    drawWaveform(stem, false, wfPhase[stem]);
+  }
+
   // ─── State ───────────────────────────────────────────────────────────────────
   let audioInputPath = null;
   let isSeparating   = false;
@@ -194,6 +263,7 @@
     const btn = playBtns[stem];
     if (btn) { btn.textContent = "Play"; btn.classList.remove("is-playing"); }
     document.getElementById(`card-${stem}`)?.classList.remove("is-playing");
+    stopWaveformAnim(stem);
     if (playingStem === stem) playingStem = null;
   }
 
@@ -215,13 +285,14 @@
       playBtns[stem].textContent = "Stop";
       playBtns[stem].classList.add("is-playing");
       document.getElementById(`card-${stem}`)?.classList.add("is-playing");
+      startWaveformAnim(stem);
       playingStem = stem;
     });
 
     saveBtns[stem].addEventListener("click", async () => {
       const p = stemPaths[stem];
       if (!p) return;
-      const saved = await window.electronAPI.saveStem(p);
+      const saved = await window.electronAPI.saveStem(p, stem);
       if (saved) setStatus(`Saved: ${saved.split("/").pop()}`, true);
     });
   });
@@ -233,6 +304,8 @@
   });
 
   // ─── Init ────────────────────────────────────────────────────────────────────
+  initWaveforms();
+
   window.electronAPI.onSidecarReady(() => {
     setStatus("Ready");
     // Separate button stays disabled until a file is loaded

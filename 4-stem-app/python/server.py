@@ -38,6 +38,14 @@ def separate():
     if not input_path or not os.path.isfile(input_path):
         return jsonify({"error": "inputPath missing or not found"}), 400
 
+    # C3: validate file extension — only allow known audio formats
+    ALLOWED_EXTENSIONS = {".mp3", ".wav", ".flac", ".aiff", ".aif", ".ogg", ".m4a", ".mp4"}
+    if os.path.splitext(input_path)[1].lower() not in ALLOWED_EXTENSIONS:
+        return jsonify({"error": "File type not allowed"}), 400
+
+    # Prevent path traversal — resolve symlinks and ensure it's a real file path
+    input_path = os.path.realpath(input_path)
+
     snap = sep.progress.snapshot()
     if snap["status"] == "separating":
         return jsonify({"error": "Separation already in progress"}), 409

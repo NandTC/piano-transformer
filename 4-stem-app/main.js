@@ -2,7 +2,7 @@
  * main.js — Electron main process for 4-Stem
  */
 
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, nativeImage } = require("electron");
 app.commandLine.appendSwitch("disable-features", "AudioServiceOutOfProcess,AudioServiceLaunchOnStartup");
 
 const path = require("path");
@@ -69,9 +69,10 @@ function httpPost(port, urlPath, body) {
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
-let mainWindow    = null;
-let sidecarProcess = null;
-let sidecarPort   = null;
+let mainWindow      = null;
+let sidecarProcess  = null;
+let sidecarPort     = null;
+let currentInputName = null;  // base name of the last separated file (no extension)
 
 // ─── Sidecar ─────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,7 @@ async function createWindow() {
     resizable: false,
     titleBarStyle: "hiddenInset",
     backgroundColor: "#FFFFFF",
+    icon: path.join(__dirname, "assets", "icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -137,6 +139,9 @@ async function createWindow() {
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 
 app.whenReady().then(async () => {
+  if (process.platform === "darwin") {
+    app.dock.setIcon(nativeImage.createFromPath(path.join(__dirname, "assets", "icon.png")));
+  }
   try {
     await spawnSidecar();
     console.log("[main] Sidecar port:", sidecarPort);
@@ -169,6 +174,7 @@ ipcMain.handle("open-audio-file", async () => {
 });
 
 ipcMain.handle("separate", async (_e, inputPath) => {
+  currentInputName = path.basename(inputPath, path.extname(inputPath));
   return httpPost(sidecarPort, "/separate", { inputPath });
 });
 
@@ -180,12 +186,11 @@ ipcMain.handle("cancel", async () => {
   return httpPost(sidecarPort, "/cancel", {});
 });
 
-ipcMain.handle("save-stem", async (_e, stemPath) => {
-  const ext  = path.extname(stemPath);
-  const base = path.basename(stemPath, ext);
+ipcMain.handle("save-stem", async (_e, stemPath, stemKey) => {
+  const baseName = currentInputName ? `${currentInputName}_${stemKey}` : stemKey;
   const result = await dialog.showSaveDialog(mainWindow, {
     title: "Save Stem",
-    defaultPath: base,
+    defaultPath: baseName,
     filters: [{ name: "WAV Audio", extensions: ["wav"] }],
   });
   if (result.canceled || !result.filePath) return null;
@@ -201,7 +206,8 @@ ipcMain.handle("save-all-stems", async (_e, stems) => {
   if (result.canceled || result.filePaths.length === 0) return null;
   const dir = result.filePaths[0];
   for (const [key, srcPath] of Object.entries(stems)) {
-    const dest = path.join(dir, `${key}.wav`);
+    const baseName = currentInputName ? `${currentInputName}_${key}` : key;
+    const dest = path.join(dir, `${baseName}.wav`);
     fs.copyFileSync(srcPath, dest);
   }
   return dir;

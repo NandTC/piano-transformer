@@ -16,6 +16,7 @@
       <header class="header">
         <h1 class="header__title">4-Stem</h1>
         <p class="header__subtitle">AI Audio Stem Separator</p>
+        <p class="header__dev">Nobody And The Computer</p>
       </header>
 
       <!-- DROPZONE -->
@@ -41,10 +42,7 @@
         <div class="stem-card stem-card--vocals" id="card-vocals">
           <div class="stem-card__name">Vocals</div>
           <div class="stem-card__viz" id="viz-vocals">
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <canvas class="stem-waveform" id="wf-vocals"></canvas>
           </div>
           <div class="stem-card__actions">
             <button class="stem-btn stem-btn--play" id="play-vocals">Play</button>
@@ -55,10 +53,7 @@
         <div class="stem-card stem-card--drums" id="card-drums">
           <div class="stem-card__name">Drums</div>
           <div class="stem-card__viz" id="viz-drums">
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <canvas class="stem-waveform" id="wf-drums"></canvas>
           </div>
           <div class="stem-card__actions">
             <button class="stem-btn stem-btn--play" id="play-drums">Play</button>
@@ -69,10 +64,7 @@
         <div class="stem-card stem-card--bass" id="card-bass">
           <div class="stem-card__name">Bass</div>
           <div class="stem-card__viz" id="viz-bass">
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <canvas class="stem-waveform" id="wf-bass"></canvas>
           </div>
           <div class="stem-card__actions">
             <button class="stem-btn stem-btn--play" id="play-bass">Play</button>
@@ -83,10 +75,7 @@
         <div class="stem-card stem-card--other" id="card-other">
           <div class="stem-card__name">Other</div>
           <div class="stem-card__viz" id="viz-other">
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            <canvas class="stem-waveform" id="wf-other"></canvas>
           </div>
           <div class="stem-card__actions">
             <button class="stem-btn stem-btn--play" id="play-other">Play</button>

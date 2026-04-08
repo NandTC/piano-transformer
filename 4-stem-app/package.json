@@ -5,7 +5,7 @@
   "author": "NandTC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/NandTC/piano-transformer.git"
+    "url": "https://github.com/NandTC/4-stem.git"
   },
   "main": "main.js",
   "scripts": {
@@ -19,10 +19,12 @@
     "directories": {
       "output": "dist"
     },
+    "icon": "assets/icon",
     "files": [
       "main.js",
       "preload.js",
-      "src/**/*"
+      "src/**/*",
+      "assets/**/*"
     ],
     "extraResources": [
       {
@@ -50,7 +52,7 @@
     "publish": {
       "provider": "github",
       "owner": "NandTC",
-      "repo": "piano-transformer"
+      "repo": "4-stem"
     },
     "win": {
       "target": [

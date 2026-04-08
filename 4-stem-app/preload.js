@@ -6,6 +6,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   separate:        (inputPath) => ipcRenderer.invoke("separate", inputPath),
   getProgress:     ()  => ipcRenderer.invoke("get-progress"),
   cancel:          ()  => ipcRenderer.invoke("cancel"),
-  saveStem:        (stemPath) => ipcRenderer.invoke("save-stem", stemPath),
+  saveStem:        (stemPath, stemKey) => ipcRenderer.invoke("save-stem", stemPath, stemKey),
   saveAllStems:    (stems)    => ipcRenderer.invoke("save-all-stems", stems),
 });
